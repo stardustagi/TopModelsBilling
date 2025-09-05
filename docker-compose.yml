@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+  fee:
+    image: alpine:latest
+    container_name: fee
+    restart: always
+    volumes:
+      - ./:/app
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    working_dir: /app
+    environment:
+      - APP_ENV=test
+    networks:
+      - traefik
+    ports:
+      - 6001:6001
+    command:
+      - ./build/FeeServer
+      - start
+      - --config
+      - config/server.hcl
+networks:
+  traefik:
+    external: true
