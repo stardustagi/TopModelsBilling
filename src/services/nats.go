@@ -156,3 +156,28 @@ func (m *NatsMQ) Start() {
 		logrus.Infof("Consumer: %s started", name)
 	}
 }
+
+func (m *NatsMQ) Publish(data interface{}) error {
+	js, err := m.client.JetStream()
+	if err != nil {
+		logrus.Errorf("Failed to connect to JetStream: %v", err)
+		return err
+	}
+
+	payload, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+	// 设置发布选项
+	opts := []nats.PubOpt{
+		nats.AckWait(30 * time.Second),
+	}
+	_, err = js.Publish("billing.userConsume", payload, opts...)
+	if err != nil {
+		logrus.Errorf("Failed to publish message to topic %s: %v", "billing.userConsume", err)
+		return err
+	}
+
+	logrus.Debugf("Published message to topic %s: %s", "billing.userConsume", string(payload))
+	return nil
+}

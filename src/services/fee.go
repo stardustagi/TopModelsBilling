@@ -73,27 +73,31 @@ func (m *FeeService) Do(report LLMReportMessage) (bool, error) {
 		return false, nil
 	}
 
-	if err := m.deductFees(instances); err != nil {
+	consumes, err := m.deductFees(instances)
+	if err != nil {
 		logrus.Errorf("Failed to deduct fees: %v, error: %v", utils.EncodeToString(report), err)
 		return true, err
 	}
+
+	m.mq.Publish(consumes)
+
 	return false, nil
 }
 
-func (m *FeeService) deductFees(instances []FeeInstance) error {
+func (m *FeeService) deductFees(instances []FeeInstance) ([]*models.UserConsumeRecord, error) {
 	session := m.xorm.NewSession()
 	defer session.Close()
 	if err := session.Begin(); err != nil {
-		return err
+		return nil, err
 	}
-
+	var consumes []*models.UserConsumeRecord
 	for _, inst := range instances {
 		var details []models.UserConsumeRecord
 		balance := models.UserWallet{UserId: inst.userId}
 		if has, err := session.Get(&balance); err != nil {
-			return err
+			return nil, err
 		} else if !has {
-			return fmt.Errorf("user wallet not found: %d", inst.userId)
+			return nil, fmt.Errorf("user wallet not found: %d", inst.userId)
 		}
 
 		inputCost := CalculateTokenCostMicro(inst.data.TokenUsage.InputTokens, float64(inst.priceInfo.InputPrice))
@@ -105,10 +109,10 @@ func (m *FeeService) deductFees(instances []FeeInstance) error {
 		rows, err := session.ID(balance.Id).Update(&balance)
 		if err != nil {
 			logrus.Errorf("update user balance failed: %d, cost: %d", inst.userId, remainingCost)
-			return err
+			return nil, err
 		}
 		if rows == 0 {
-			return fmt.Errorf("failed to update user balance: %d, cost: %d", inst.userId, remainingCost)
+			return nil, fmt.Errorf("failed to update user balance: %d, cost: %d", inst.userId, remainingCost)
 		}
 
 		//保存扣费记录
@@ -130,18 +134,19 @@ func (m *FeeService) deductFees(instances []FeeInstance) error {
 		}
 		if _, err := session.InsertOne(&record); err != nil {
 			logrus.Errorf("insert record: %v", err)
-			return err
+			return nil, err
 		}
 		if len(details) > 0 {
 			if _, err := session.InsertMulti(&details); err != nil {
 				logrus.Errorf("insert detail records: %v", err)
-				return err
+				return nil, err
 			}
 		}
+		consumes = append(consumes, &record)
 	}
 	if err := session.Commit(); err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return consumes, nil
 }
