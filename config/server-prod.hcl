@@ -1,6 +1,6 @@
 base {
   xorm {
-    datasource = ["meta:akLo50cN&fDaIj8@tcp(172.31.28.187:3306)/modelunion_llm?charset=utf8mb4&parseTime=True&loc=Local"]
+    datasource = ["topai:tjLjIVjsVbtqDQ4SEkUm@tcp(top-maas-prod-db.mysql.database.azure.com:3306)/top_maas?charset=utf8mb4&parseTime=true&loc=Local"]
     show_sql = true
     driver = "mysql"
   }
@@ -12,11 +12,11 @@ base {
   }
 }
 natsmq  {
-  url       = "nats://47.128.253.184:4222"
-  user      = "agentcp-mq"
-  pass      = "mq09Hgyl871xMTblUiTBOLV3MKDeAy"
-  topic     = "modelgate/token"
-  consumer  = "modelgate-fee-consumer"
+  url       = "nats://127.0.0.1:4222"
+  user      = ""
+  pass      = ""
+  topic     = "billing.nodeUsage"
+  consumer  = "fee-consumer"
   worker_group      = "fee-worker-group"
   buffer_size       = 1024
   ack_wait_mintues  = 5

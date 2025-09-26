@@ -28,6 +28,11 @@ run: tidy
 	cd src && \
 	go run main.go start --application fee --profile dev --config ../config/server.hcl --log.level=debug --log.path ../logs
 
+
+run-prod: tidy
+	cd src && \
+	go run main.go start --application fee --profile prod --config ../config/server-prod.hcl --log.level=debug --log.path ../logs
+
 publish: build
 	echo 1
 	# ssh root@47.111.5.245 mkdir -p /data/aid.pub/chain-monitor/logs
