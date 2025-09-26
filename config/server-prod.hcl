@@ -1,15 +1,7 @@
-base {
-  xorm {
-    datasource = ["topai:tjLjIVjsVbtqDQ4SEkUm@tcp(top-maas-prod-db.mysql.database.azure.com:3306)/top_maas?charset=utf8mb4&parseTime=true&loc=Local"]
-    show_sql = true
-    driver = "mysql"
-  }
-  http {
-    address = "0.0.0.0"
-    port    = "8080"
-    path    = ""
-    key     = ""
-  }
+xorm {
+  datasource = ["topai:tjLjIVjsVbtqDQ4SEkUm@tcp(top-maas-prod-db.mysql.database.azure.com:3306)/top_maas?charset=utf8mb4&parseTime=true&loc=Local"]
+  show_sql = true
+  driver = "mysql"
 }
 natsmq  {
   url       = "nats://127.0.0.1:4222"
