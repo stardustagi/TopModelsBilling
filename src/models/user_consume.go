@@ -17,8 +17,8 @@ type UserConsumeRecord struct {
 	InputPrice       int    `xorm:"int default 0 comment('输入token价格')" json:"input_price"`      // 输入token价格
 	OutputPrice      int    `xorm:"int default 0 comment('输出token价格')" json:"output_price"`     // 输出token价格
 	CachePrice       int    `xorm:"int default 0 comment('缓存token价格')" json:"cache_price"`      // 缓存token价格
-	CreatedAt        int64  `xorm:"created comment('创建时间')" json:"created"`                     // 创建时间
-	UpdatedAt        int64  `xorm:"updated comment('更新时间')" json:"updated"`                     // 更新时间
+	CreatedAt        int64  `xorm:"created_at comment('创建时间')" json:"created"`                  // 创建时间
+	UpdatedAt        int64  `xorm:"updated_at comment('更新时间')" json:"updated"`                  // 更新时间
 }
 
 func (UserConsumeRecord) TableName() string {
