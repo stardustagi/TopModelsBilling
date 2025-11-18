@@ -56,9 +56,6 @@ func (m *FeeService) Do(report LLMReportMessage) (bool, error) {
 	logrus.Tracef("Received message: %v", report)
 	var instances []FeeInstance
 	for _, usage := range report {
-		if usage.TokenUsage.ISZero() {
-			continue
-		}
 
 		priceInfo, has := m.price.FetchProviderPrice(usage.ModelId)
 		if !has {
@@ -99,9 +96,9 @@ func (m *FeeService) deductFees(instances []FeeInstance) ([]*models.UserConsumeR
 		} else if !has {
 			return nil, fmt.Errorf("user wallet not found: %d", inst.userId)
 		}
-
-		inputCost := CalculateTokenCostMicro(inst.data.TokenUsage.InputTokens, float64(inst.priceInfo.InputPrice))
-		outputCost := CalculateTokenCostMicro(inst.data.TokenUsage.InputTokens, float64(inst.priceInfo.InputPrice))
+		usage := inst.data.TokenUsage.(TokenUsage)
+		inputCost := CalculateTokenCostMicro(usage.InputTokens, float64(inst.priceInfo.InputPrice))
+		outputCost := CalculateTokenCostMicro(usage.InputTokens, float64(inst.priceInfo.InputPrice))
 
 		remainingCost := inputCost + outputCost
 		balance.Balance -= remainingCost
@@ -124,12 +121,6 @@ func (m *FeeService) deductFees(instances []FeeInstance) ([]*models.UserConsumeR
 			TotalConsumed:    remainingCost,
 			ActualProvider:   inst.data.ActualProvider,
 			ActualProviderId: inst.data.ActualProviderId,
-			InputTokens:      inst.data.TokenUsage.InputTokens,
-			OutputTokens:     inst.data.TokenUsage.OutputTokens,
-			CacheTokens:      inst.data.TokenUsage.CacheTokens,
-			InputPrice:       inst.priceInfo.InputPrice,
-			OutputPrice:      inst.priceInfo.OutputPrice,
-			CachePrice:       inst.priceInfo.CachePrice,
 			CreatedAt:        time.Now().Unix(),
 		}
 		if _, err := session.InsertOne(&record); err != nil {

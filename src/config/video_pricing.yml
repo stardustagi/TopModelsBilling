@@ -1,0 +1,38 @@
+# Video Generation Pricing Configuration
+# This file defines pricing for various video generation models and resolutions
+# All prices are in USD per second
+
+version: "1.0"
+last_updated: "2025-01-01"
+
+# Pricing structure for video generation models
+models:
+  # Sora 2 Model
+  - model: "sora-2"
+    description: "OpenAI Sora 2 - Standard video generation model"
+    enabled: true
+    resolutions:
+      - resolution: "720x1280"
+        price_per_second: 0.10
+        description: "Portrait 720x1280 pixels (HD)"
+      - resolution: "1280x720"
+        price_per_second: 0.10
+        description: "Landscape 1280x720 pixels (HD)"
+
+  # Sora 2 Pro Model
+  - model: "sora-2-pro"
+    description: "OpenAI Sora 2 Pro - Professional video generation model"
+    enabled: true
+    resolutions:
+      - resolution: "720x1280"
+        price_per_second: 0.30
+        description: "Portrait 720x1280 pixels (HD)"
+      - resolution: "1280x720"
+        price_per_second: 0.30
+        description: "Landscape 1280x720 pixels (HD)"
+      - resolution: "1024x1792"
+        price_per_second: 0.50
+        description: "Portrait 1024x1792 pixels (Full HD)"
+      - resolution: "1792x1024"
+        price_per_second: 0.50
+        description: "Landscape 1792x1024 pixels (Full HD)"
