@@ -1,0 +1,145 @@
+# Image Generation Pricing Configuration
+# This file defines pricing for various image generation models, qualities, and sizes
+
+version: "1.0"
+last_updated: "2024-01-01"
+
+# Pricing structure for image generation models
+# All prices are in USD per image
+models:
+  # GPT Image 1 Model
+  - model: "gpt-image-1"
+    description: "GPT Image Generation Model - Version 1"
+    enabled: true
+    qualities:
+      - quality: "low"
+        description: "Low quality image generation"
+        sizes:
+          - size: "1024x1024"
+            price: 0.011
+            description: "Square 1024x1024 pixels"
+          - size: "1024x1536"
+            price: 0.016
+            description: "Portrait 1024x1536 pixels"
+          - size: "1536x1024"
+            price: 0.016
+            description: "Landscape 1536x1024 pixels"
+
+      - quality: "medium"
+        description: "Medium quality image generation"
+        sizes:
+          - size: "1024x1024"
+            price: 0.042
+            description: "Square 1024x1024 pixels"
+          - size: "1024x1536"
+            price: 0.063
+            description: "Portrait 1024x1536 pixels"
+          - size: "1536x1024"
+            price: 0.063
+            description: "Landscape 1536x1024 pixels"
+
+      - quality: "high"
+        description: "High quality image generation"
+        sizes:
+          - size: "1024x1024"
+            price: 0.167
+            description: "Square 1024x1024 pixels"
+          - size: "1024x1536"
+            price: 0.25
+            description: "Portrait 1024x1536 pixels"
+          - size: "1536x1024"
+            price: 0.25
+            description: "Landscape 1536x1024 pixels"
+
+  # GPT Image 1 Mini Model
+  - model: "gpt-image-1-mini"
+    description: "GPT Image Generation Model - Mini Version"
+    enabled: true
+    qualities:
+      - quality: "low"
+        description: "Low quality image generation"
+        sizes:
+          - size: "1024x1024"
+            price: 0.005
+            description: "Square 1024x1024 pixels"
+          - size: "1024x1536"
+            price: 0.006
+            description: "Portrait 1024x1536 pixels"
+          - size: "1536x1024"
+            price: 0.006
+            description: "Landscape 1536x1024 pixels"
+
+      - quality: "medium"
+        description: "Medium quality image generation"
+        sizes:
+          - size: "1024x1024"
+            price: 0.011
+            description: "Square 1024x1024 pixels"
+          - size: "1024x1536"
+            price: 0.015
+            description: "Portrait 1024x1536 pixels"
+          - size: "1536x1024"
+            price: 0.015
+            description: "Landscape 1536x1024 pixels"
+
+      - quality: "high"
+        description: "High quality image generation"
+        sizes:
+          - size: "1024x1024"
+            price: 0.036
+            description: "Square 1024x1024 pixels"
+          - size: "1024x1536"
+            price: 0.052
+            description: "Portrait 1024x1536 pixels"
+          - size: "1536x1024"
+            price: 0.052
+            description: "Landscape 1536x1024 pixels"
+
+  # DALL-E 3 Model
+  - model: "dall-e-3"
+    description: "OpenAI DALL-E 3 Model"
+    enabled: true
+    qualities:
+      - quality: "standard"
+        description: "Standard quality image generation"
+        sizes:
+          - size: "1024x1024"
+            price: 0.04
+            description: "Square 1024x1024 pixels"
+          - size: "1024x1792"
+            price: 0.08
+            description: "Portrait 1024x1792 pixels"
+          - size: "1792x1024"
+            price: 0.08
+            description: "Landscape 1792x1024 pixels"
+
+      - quality: "hd"
+        description: "HD quality image generation"
+        sizes:
+          - size: "1024x1024"
+            price: 0.08
+            description: "Square 1024x1024 pixels"
+          - size: "1024x1792"
+            price: 0.12
+            description: "Portrait 1024x1792 pixels"
+          - size: "1792x1024"
+            price: 0.12
+            description: "Landscape 1792x1024 pixels"
+
+  # DALL-E 2 Model
+  - model: "dall-e-2"
+    description: "OpenAI DALL-E 2 Model"
+    enabled: true
+    qualities:
+      - quality: "standard"
+        description: "Standard quality image generation"
+        sizes:
+          - size: "256x256"
+            price: 0.016
+            description: "Small 256x256 pixels"
+          - size: "512x512"
+            price: 0.018
+            description: "Medium 512x512 pixels"
+          - size: "1024x1024"
+            price: 0.02
+            description: "Large 1024x1024 pixels"

@@ -17,6 +17,32 @@ type FeeInstance struct {
 	data      LLMCallData
 	priceInfo PriceInfo
 }
+
+func (i FeeInstance) ImageUsage() ([]ImageUsage, error) {
+	var usage []ImageUsage
+	if err := utils.Swap(i.data.TokenUsage, &usage); err != nil {
+		return nil, err
+	}
+
+	return usage, nil
+}
+
+func (i FeeInstance) VideoUsage() (*VideoUsage, error) {
+	var usage VideoUsage
+	if err := utils.Swap(i.data.TokenUsage, &usage); err != nil {
+		return nil, err
+	}
+	return &usage, nil
+}
+
+func (i FeeInstance) TextUsage() (*TextUsage, error) {
+	var usage TextUsage
+	if err := utils.Swap(i.data.TokenUsage, &usage); err != nil {
+		return nil, err
+	}
+	return &usage, nil
+}
+
 type FeeService struct {
 	xorm  xorm.EngineInterface
 	mq    *NatsMQ
@@ -52,39 +78,61 @@ func (m *FeeService) Stop() {
 }
 
 func (m *FeeService) Do(report LLMReportMessage) (bool, error) {
-
 	logrus.Tracef("Received message: %v", report)
-	var instances []FeeInstance
+
+	var textInstances, imageInstances, videoInstances []FeeInstance
 	for _, usage := range report {
-		if usage.TokenUsage.ISZero() {
-			continue
+		inst := FeeInstance{userId: usage.UserId(), data: *usage}
+
+		switch usage.ReportType {
+		case ImageReportType:
+			imageInstances = append(imageInstances, inst)
+		case VideoReportType:
+			videoInstances = append(videoInstances, inst)
+		default:
+			priceInfo, has := m.price.FetchProviderPrice(usage.ModelId)
+			if !has {
+				return false, fmt.Errorf("model price not found: %s, %s", usage.ModelId, usage.Model)
+			}
+			inst.priceInfo = priceInfo
+			textInstances = append(textInstances, inst)
 		}
+		logrus.Infof("consume info: user: %s, provider: %s, model: %s, type: %s, usage: %v", usage.Caller, usage.Provider, usage.Model, usage.ReportType, usage.TokenUsage)
+	}
 
-		priceInfo, has := m.price.FetchProviderPrice(usage.ModelId)
-		if !has {
-			return false, fmt.Errorf("model price not found: %s, %s", usage.ModelId, usage.Model)
+	var allConsumes []*models.UserConsumeRecord
+	if len(textInstances) > 0 {
+		consumes, err := m.deductTextFees(textInstances)
+		if err != nil {
+			logrus.Errorf("Failed to deduct text fees: %v", err)
+			return true, err
 		}
-
-		logrus.Infof("consume info: user: %s, provider: %s, model: %s, price: %v, usage: %s", usage.Caller, usage.Provider, usage.Model, priceInfo, usage.TokenUsage)
-		instances = append(instances, FeeInstance{userId: usage.UserId(), data: *usage, priceInfo: priceInfo})
+		allConsumes = append(allConsumes, consumes...)
+	}
+	if len(imageInstances) > 0 {
+		consumes, err := m.deductImageFees(imageInstances)
+		if err != nil {
+			logrus.Errorf("Failed to deduct image fees: %v", err)
+			return true, err
+		}
+		allConsumes = append(allConsumes, consumes...)
+	}
+	if len(videoInstances) > 0 {
+		consumes, err := m.deductVideoFees(videoInstances)
+		if err != nil {
+			logrus.Errorf("Failed to deduct video fees: %v", err)
+			return true, err
+		}
+		allConsumes = append(allConsumes, consumes...)
 	}
 
-	if len(instances) == 0 {
-		return false, nil
+	if len(allConsumes) > 0 {
+		m.mq.Publish(allConsumes)
 	}
-
-	consumes, err := m.deductFees(instances)
-	if err != nil {
-		logrus.Errorf("Failed to deduct fees: %v, error: %v", utils.EncodeToString(report), err)
-		return true, err
-	}
-
-	m.mq.Publish(consumes)
-
 	return false, nil
 }
 
-func (m *FeeService) deductFees(instances []FeeInstance) ([]*models.UserConsumeRecord, error) {
+func (m *FeeService) deductTextFees(instances []FeeInstance) ([]*models.UserConsumeRecord, error) {
 	session := m.xorm.NewSession()
 	defer session.Close()
 	if err := session.Begin(); err != nil {
@@ -100,8 +148,9 @@ func (m *FeeService) deductFees(instances []FeeInstance) ([]*models.UserConsumeR
 			return nil, fmt.Errorf("user wallet not found: %d", inst.userId)
 		}
 
-		inputCost := CalculateTokenCostMicro(inst.data.TokenUsage.InputTokens, float64(inst.priceInfo.InputPrice))
-		outputCost := CalculateTokenCostMicro(inst.data.TokenUsage.InputTokens, float64(inst.priceInfo.InputPrice))
+		usage := inst.data.TokenUsage.(TextUsage)
+		inputCost := CalculateTokenCostMicro(usage.InputTokens, float64(inst.priceInfo.InputPrice))
+		outputCost := CalculateTokenCostMicro(usage.InputTokens, float64(inst.priceInfo.InputPrice))
 
 		remainingCost := inputCost + outputCost
 		balance.Balance -= remainingCost
@@ -124,12 +173,6 @@ func (m *FeeService) deductFees(instances []FeeInstance) ([]*models.UserConsumeR
 			TotalConsumed:    remainingCost,
 			ActualProvider:   inst.data.ActualProvider,
 			ActualProviderId: inst.data.ActualProviderId,
-			InputTokens:      inst.data.TokenUsage.InputTokens,
-			OutputTokens:     inst.data.TokenUsage.OutputTokens,
-			CacheTokens:      inst.data.TokenUsage.CacheTokens,
-			InputPrice:       inst.priceInfo.InputPrice,
-			OutputPrice:      inst.priceInfo.OutputPrice,
-			CachePrice:       inst.priceInfo.CachePrice,
 			CreatedAt:        time.Now().Unix(),
 		}
 		if _, err := session.InsertOne(&record); err != nil {
@@ -148,5 +191,126 @@ func (m *FeeService) deductFees(instances []FeeInstance) ([]*models.UserConsumeR
 		return nil, err
 	}
 
+	return consumes, nil
+}
+
+func (m *FeeService) deductImageFees(instances []FeeInstance) ([]*models.UserConsumeRecord, error) {
+	session := m.xorm.NewSession()
+	defer session.Close()
+	if err := session.Begin(); err != nil {
+		return nil, err
+	}
+	var consumes []*models.UserConsumeRecord
+	for _, inst := range instances {
+		balance := models.UserWallet{UserId: inst.userId}
+		if has, err := session.Get(&balance); err != nil {
+			return nil, err
+		} else if !has {
+			return nil, fmt.Errorf("user wallet not found: %d", inst.userId)
+		}
+
+		totalPrice, _, err := m.calculateImageActualCost(inst)
+		if err != nil {
+			return nil, err
+		}
+		balance.Balance -= totalPrice
+
+		if _, err := session.ID(balance.Id).Update(&balance); err != nil {
+			return nil, err
+		}
+
+		record := models.UserConsumeRecord{
+			UserId:           inst.userId,
+			Model:            inst.data.Model,
+			ModelId:          inst.data.ModelId,
+			NodeId:           inst.data.NodeId,
+			TotalConsumed:    totalPrice,
+			ConsumeType:      "image",
+			ActualProvider:   inst.data.ActualProvider,
+			ActualProviderId: inst.data.ActualProviderId,
+			CreatedAt:        time.Now().Unix(),
+		}
+		if _, err := session.InsertOne(&record); err != nil {
+			return nil, err
+		}
+
+		usage, _ := inst.ImageUsage()
+		var details []models.UserConsumeDetailImage
+		for _, img := range usage {
+			details = append(details, models.UserConsumeDetailImage{
+				ConsumeId: record.ID,
+				Quality:   img.Quality,
+				Size:      img.Size,
+				CreatedAt: time.Now().Unix(),
+			})
+		}
+		if len(details) > 0 {
+			if _, err := session.InsertMulti(&details); err != nil {
+				return nil, err
+			}
+		}
+		consumes = append(consumes, &record)
+	}
+	if err := session.Commit(); err != nil {
+		return nil, err
+	}
+	return consumes, nil
+}
+
+func (m *FeeService) deductVideoFees(instances []FeeInstance) ([]*models.UserConsumeRecord, error) {
+	session := m.xorm.NewSession()
+	defer session.Close()
+	if err := session.Begin(); err != nil {
+		return nil, err
+	}
+	var consumes []*models.UserConsumeRecord
+	for _, inst := range instances {
+		balance := models.UserWallet{UserId: inst.userId}
+		if has, err := session.Get(&balance); err != nil {
+			return nil, err
+		} else if !has {
+			return nil, fmt.Errorf("user wallet not found: %d", inst.userId)
+		}
+
+		totalPrice, _, err := m.calculateVideoActualCost(inst)
+		if err != nil {
+			return nil, err
+		}
+		balance.Balance -= totalPrice
+
+		if _, err := session.ID(balance.Id).Update(&balance); err != nil {
+			return nil, err
+		}
+
+		record := models.UserConsumeRecord{
+			UserId:           inst.userId,
+			Model:            inst.data.Model,
+			ModelId:          inst.data.ModelId,
+			NodeId:           inst.data.NodeId,
+			TotalConsumed:    totalPrice,
+			ConsumeType:      "video",
+			ActualProvider:   inst.data.ActualProvider,
+			ActualProviderId: inst.data.ActualProviderId,
+			CreatedAt:        time.Now().Unix(),
+		}
+		if _, err := session.InsertOne(&record); err != nil {
+			return nil, err
+		}
+
+		usage, _ := inst.VideoUsage()
+		detail := models.UserConsumeDetailVideo{
+			ConsumdId: record.ID,
+			Seconds:   usage.Seconds,
+			Size:      usage.Size,
+			CreatedAt: time.Now().Unix(),
+		}
+		if _, err := session.InsertOne(&detail); err != nil {
+			return nil, err
+		}
+		consumes = append(consumes, &record)
+	}
+	if err := session.Commit(); err != nil {
+		return nil, err
+	}
 	return consumes, nil
 }

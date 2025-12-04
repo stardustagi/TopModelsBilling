@@ -5,6 +5,42 @@ import (
 	"strconv"
 )
 
+type ReportType string
+
+const (
+	TextReportType  ReportType = "text"
+	ImageReportType ReportType = "image"
+	VideoReportType ReportType = "video"
+)
+
+// TokenUsage 记录 token 使用情况
+type ImageUsage struct {
+	Quality string `json:"quality"`
+	Size    string `json:"size"`
+}
+
+// VideoUsage 记录 token 使用情况
+type VideoUsage struct {
+	Seconds float64 `json:"seconds"`
+	Size    string  `json:"size"`
+}
+
+type TextUsage struct {
+	InputTokens     int64   `json:"input_tokens"`
+	OutputTokens    int64   `json:"output_tokens"`
+	CacheTokens     int64   `json:"cache_tokens"`
+	ReasoningTokens int     `json:"reasoning_tokens"`
+	TokensPerSec    int     `json:"tokens_per_sec"`
+	Latency         float64 `json:"latency"`
+}
+
+func (u TextUsage) ISZero() bool {
+	return u.InputTokens+u.OutputTokens+u.CacheTokens == 0
+}
+func (u TextUsage) String() string {
+	return fmt.Sprintf("<TokenUsage: input:%d, ouput:%d>", u.InputTokens, u.OutputTokens)
+}
+
 type LLMReportMessage []*LLMCallData
 type LLMCallData struct {
 	Id               string     `json:"id"`
@@ -18,10 +54,10 @@ type LLMCallData struct {
 	Caller           string     `json:"caller"`
 	CallerKey        string     `json:"caller_key"`
 	ClientVersion    string     `json:"client_version,omitempty"`
-	TokenUsage       TokenUsage `json:"token_usage"`
 	AgentVersion     string     `json:"agent_version,omitempty"`
 	Stream           bool       `json:"stream"`
-	CreatedAt        int64      `json:"created_at"`
+	ReportType       ReportType `json:"report_type"`
+	TokenUsage       any        `json:"token_usage"`
 }
 
 func (l *LLMCallData) UserId() int64 {
@@ -31,22 +67,6 @@ func (l *LLMCallData) UserId() int64 {
 
 func (m LLMCallData) String() string {
 	return fmt.Sprintf("<LLMCallData: id:%s, model:%s, caller:%s, node:%s>", m.Id, m.Model, m.Caller, m.NodeId)
-}
-
-type TokenUsage struct {
-	InputTokens     int64   `json:"input_tokens"`
-	OutputTokens    int64   `json:"output_tokens"`
-	CacheTokens     int64   `json:"cache_tokens"`
-	ReasoningTokens int     `json:"reasoning_tokens"`
-	TokensPerSec    int     `json:"tokens_per_sec"`
-	Latency         float64 `json:"latency"`
-}
-
-func (u TokenUsage) ISZero() bool {
-	return u.InputTokens+u.OutputTokens+u.CacheTokens == 0
-}
-func (u TokenUsage) String() string {
-	return fmt.Sprintf("<TokenUsage: input:%d, ouput:%d>", u.InputTokens, u.OutputTokens)
 }
 
 type ModelsInfo struct {

@@ -5,7 +5,7 @@ xorm {
 }
 
 natsmq  {
-  url       = "nats://127.0.0.1:4222"
+  url       = "nats://20.184.36.70:4222"
   user      = ""
   pass      = ""
   topic     = "billing.nodeUsage"
