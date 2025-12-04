@@ -148,7 +148,7 @@ func (m *FeeService) deductTextFees(instances []FeeInstance) ([]*models.UserCons
 			return nil, fmt.Errorf("user wallet not found: %d", inst.userId)
 		}
 
-		usage := inst.data.TokenUsage.(TextUsage)
+		usage, _ := inst.TextUsage()
 		inputCost := CalculateTokenCostMicro(usage.InputTokens, float64(inst.priceInfo.InputPrice))
 		outputCost := CalculateTokenCostMicro(usage.InputTokens, float64(inst.priceInfo.InputPrice))
 
@@ -168,7 +168,7 @@ func (m *FeeService) deductTextFees(instances []FeeInstance) ([]*models.UserCons
 		record := models.UserConsumeRecord{
 			UserId:           inst.userId,
 			Model:            inst.data.Model,
-			ModelId:          inst.data.NodeId,
+			ModelId:          inst.data.ModelId,
 			NodeId:           inst.data.NodeId,
 			TotalConsumed:    remainingCost,
 			ActualProvider:   inst.data.ActualProvider,

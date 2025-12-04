@@ -27,7 +27,7 @@ func (m *Handler) decode(data []byte) []*LLMCallData {
 
 	err := json.Unmarshal(data, &raw)
 	if nil != err {
-		logrus.Errorf("Failed to unmarshal data: %s", string(data))
+		logrus.Errorf("Failed to unmarshal data: %s, error: %s", string(data), err)
 		return nil
 	}
 	return raw

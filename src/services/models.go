@@ -44,9 +44,9 @@ func (u TextUsage) String() string {
 type LLMReportMessage []*LLMCallData
 type LLMCallData struct {
 	Id               string     `json:"id"`
-	NodeId           string     `json:"node_id"`
+	NodeId           int        `json:"node_id"`
 	Model            string     `json:"model"`
-	ModelId          string     `json:"model_id"`     // 模型id（计费使用）
+	ModelId          int        `json:"model_id"`     // 模型id（计费使用）
 	ActualModel      string     `json:"actual_model"` // 实际使用的模型
 	Provider         string     `json:"provider"`
 	ActualProvider   string     `json:"actual_provider"`    // 实际服务商
@@ -66,13 +66,11 @@ func (l *LLMCallData) UserId() int64 {
 }
 
 func (m LLMCallData) String() string {
-	return fmt.Sprintf("<LLMCallData: id:%s, model:%s, caller:%s, node:%s>", m.Id, m.Model, m.Caller, m.NodeId)
+	return fmt.Sprintf("<LLMCallData: id:%s, model:%s, caller:%s, node:%d>", m.Id, m.Model, m.Caller, m.NodeId)
 }
 
 type ModelsInfo struct {
 	Id          int64  `json:"id" xorm:"'id' pk autoincr BIGINT(20)"`
-	ModelId     string `json:"model_id" xorm:"'model_id' not null comment('模型ID') VARCHAR(128)"`
-	NodeId      string `json:"node_id" xorm:"'node_id' comment('node编号') VARCHAR(64)"`
 	Name        string `json:"name" xorm:"'name' comment('模型名') VARCHAR(128)"`
 	ApiVersion  string `json:"api_version" xorm:"'api_version' VARCHAR(24)"`
 	DeployName  string `json:"deploy_name" xorm:"'deploy_name' VARCHAR(128)"`

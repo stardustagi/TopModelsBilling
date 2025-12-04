@@ -36,7 +36,7 @@ func NewPriceService(ctx context.Context, xorm xorm.EngineInterface) *PriceServi
 
 // FetchProviderPrice 根据agentId、providerName、modelName获取价格信息
 // 先从本地info查找，找不到再去查询数据库，然后加入本地info
-func (m *PriceService) FetchProviderPrice(modelId string) (PriceInfo, bool) {
+func (m *PriceService) FetchProviderPrice(modelId int) (PriceInfo, bool) {
 
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
@@ -52,10 +52,14 @@ func (m *PriceService) FetchProviderPrice(modelId string) (PriceInfo, bool) {
 	}
 
 	var result ModelsInfo
-	has, err := m.xorm.Where("model_id = ?", modelId).Get(&result)
+	has, err := m.xorm.Where("id = ?", modelId).Get(&result)
 
-	if err != nil || !has {
-		logrus.Errorf("failed to fetch price info for model_id %s, error: %v", modelId, err)
+	if err != nil {
+		logrus.Errorf("failed to fetch price info for model_id %d, error: %v", modelId, err)
+		return PriceInfo{}, false
+	}
+	if !has {
+		logrus.Errorf("failed to fetch price info for model_id %d not found", modelId)
 		return PriceInfo{}, false
 	}
 
