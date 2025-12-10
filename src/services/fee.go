@@ -90,7 +90,7 @@ func (m *FeeService) Do(report LLMReportMessage) (bool, error) {
 		case VideoReportType:
 			videoInstances = append(videoInstances, inst)
 		default:
-			priceInfo, has := m.price.FetchProviderPrice(usage.ModelId)
+			priceInfo, has := m.price.FetchProviderPrice(usage.ModelId, usage.ActualProviderId)
 			if !has {
 				return false, fmt.Errorf("model price not found: %s, %s", usage.ModelId, usage.Model)
 			}
@@ -149,19 +149,24 @@ func (m *FeeService) deductTextFees(instances []FeeInstance) ([]*models.UserCons
 		}
 
 		usage, _ := inst.TextUsage()
-		inputCost := CalculateTokenCostMicro(usage.InputTokens, float64(inst.priceInfo.InputPrice))
-		outputCost := CalculateTokenCostMicro(usage.InputTokens, float64(inst.priceInfo.InputPrice))
+		inputValue := CalculateTokenCostMicro(usage.InputTokens, float64(inst.priceInfo.InputPrice))
+		outputValue := CalculateTokenCostMicro(usage.OutputTokens, float64(inst.priceInfo.OutputPrice))
+		cacheValue := CalculateTokenCostMicro(usage.CacheTokens, float64(inst.priceInfo.CachePrice))
 
-		remainingCost := inputCost + outputCost
-		balance.Balance -= remainingCost
+		remainingValue := inputValue + outputValue + cacheValue
+		balance.Balance -= remainingValue
+
+		totalCost := CalculateTokenCostMicro(usage.InputTokens, float64(inst.priceInfo.CostInputPrice))
+		totalCost += CalculateTokenCostMicro(usage.OutputTokens, float64(inst.priceInfo.CostOutputPrice))
+		totalCost += CalculateTokenCostMicro(usage.CacheTokens, float64(inst.priceInfo.CostCachePrice))
 
 		rows, err := session.ID(balance.Id).Update(&balance)
 		if err != nil {
-			logrus.Errorf("update user balance failed: %d, cost: %d", inst.userId, remainingCost)
+			logrus.Errorf("update user balance failed: %d, cost: %d", inst.userId, remainingValue)
 			return nil, err
 		}
 		if rows == 0 {
-			return nil, fmt.Errorf("failed to update user balance: %d, cost: %d", inst.userId, remainingCost)
+			return nil, fmt.Errorf("failed to update user balance: %d, cost: %d", inst.userId, remainingValue)
 		}
 
 		//保存扣费记录
@@ -170,9 +175,11 @@ func (m *FeeService) deductTextFees(instances []FeeInstance) ([]*models.UserCons
 			Model:            inst.data.Model,
 			ModelId:          inst.data.ModelId,
 			NodeId:           inst.data.NodeId,
-			TotalConsumed:    remainingCost,
+			TotalConsumed:    remainingValue,
+			ConsumeType:      "text",
 			ActualProvider:   inst.data.ActualProvider,
 			ActualProviderId: inst.data.ActualProviderId,
+			TotalCost:        totalCost,
 			CreatedAt:        time.Now().Unix(),
 		}
 		if _, err := session.InsertOne(&record); err != nil {
@@ -209,11 +216,15 @@ func (m *FeeService) deductImageFees(instances []FeeInstance) ([]*models.UserCon
 			return nil, fmt.Errorf("user wallet not found: %d", inst.userId)
 		}
 
-		totalPrice, _, err := m.calculateImageActualCost(inst)
+		price, cost, err := m.calculateImageActualCost(inst)
 		if err != nil {
 			return nil, err
 		}
-		balance.Balance -= totalPrice
+
+		totalCost := CalculateTokenCostMicro(1, cost)
+		totalConsumed := CalculateTokenCostMicro(1, price)
+
+		balance.Balance -= totalConsumed
 
 		if _, err := session.ID(balance.Id).Update(&balance); err != nil {
 			return nil, err
@@ -224,10 +235,11 @@ func (m *FeeService) deductImageFees(instances []FeeInstance) ([]*models.UserCon
 			Model:            inst.data.Model,
 			ModelId:          inst.data.ModelId,
 			NodeId:           inst.data.NodeId,
-			TotalConsumed:    totalPrice,
+			TotalConsumed:    totalConsumed,
 			ConsumeType:      "image",
 			ActualProvider:   inst.data.ActualProvider,
 			ActualProviderId: inst.data.ActualProviderId,
+			TotalCost:        totalCost,
 			CreatedAt:        time.Now().Unix(),
 		}
 		if _, err := session.InsertOne(&record); err != nil {
@@ -272,11 +284,15 @@ func (m *FeeService) deductVideoFees(instances []FeeInstance) ([]*models.UserCon
 			return nil, fmt.Errorf("user wallet not found: %d", inst.userId)
 		}
 
-		totalPrice, _, err := m.calculateVideoActualCost(inst)
+		price, cost, err := m.calculateVideoActualCost(inst)
 		if err != nil {
 			return nil, err
 		}
-		balance.Balance -= totalPrice
+
+		totalCost := CalculateTokenCostMicro(1, cost)
+		totalConsumed := CalculateTokenCostMicro(1, price)
+
+		balance.Balance -= totalConsumed
 
 		if _, err := session.ID(balance.Id).Update(&balance); err != nil {
 			return nil, err
@@ -287,7 +303,7 @@ func (m *FeeService) deductVideoFees(instances []FeeInstance) ([]*models.UserCon
 			Model:            inst.data.Model,
 			ModelId:          inst.data.ModelId,
 			NodeId:           inst.data.NodeId,
-			TotalConsumed:    totalPrice,
+			TotalConsumed:    totalCost,
 			ConsumeType:      "video",
 			ActualProvider:   inst.data.ActualProvider,
 			ActualProviderId: inst.data.ActualProviderId,

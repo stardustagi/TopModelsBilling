@@ -13,6 +13,7 @@ type UserConsumeRecord struct {
 	ActualProvider   string `xorm:"varchar(64) comment('服务商')" son:"actual_provider"`            // 实际服务商
 	ActualProviderId string `xorm:"varchar(64) comment('服务商id')" json:"actual_provider_id"`      // 实际服务商id
 	ConsumeType      string `xorm:"varchar(255) default '' comment('消费类型')" json:"consume_type"` // 消费类型
+	TotalCost        int64  `xorm:"bigint default 0 comment('成本')" json:"total_cost"`            // 成本
 	CreatedAt        int64  `xorm:"created_at comment('创建时间')" json:"created"`                   // 创建时间
 	UpdatedAt        int64  `xorm:"updated_at comment('更新时间')" json:"updated"`                   // 更新时间
 }

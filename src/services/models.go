@@ -68,19 +68,3 @@ func (l *LLMCallData) UserId() int64 {
 func (m LLMCallData) String() string {
 	return fmt.Sprintf("<LLMCallData: id:%s, model:%s, caller:%s, node:%d>", m.Id, m.Model, m.Caller, m.NodeId)
 }
-
-type ModelsInfo struct {
-	Id          int64  `json:"id" xorm:"'id' pk autoincr BIGINT(20)"`
-	Name        string `json:"name" xorm:"'name' comment('模型名') VARCHAR(128)"`
-	ApiVersion  string `json:"api_version" xorm:"'api_version' VARCHAR(24)"`
-	DeployName  string `json:"deploy_name" xorm:"'deploy_name' VARCHAR(128)"`
-	InputPrice  int    `json:"input_price" xorm:"'input_price' INT(10)"`
-	OutputPrice int    `json:"output_price" xorm:"'output_price' INT(10)"`
-	CachePrice  int    `json:"cache_price" xorm:"'cache_price' INT(10)"`
-	Status      string `json:"status" xorm:"'status' comment('模型状态') VARCHAR(12)"`
-	LastUpdate  int64  `json:"last_update" xorm:"'last_update' comment('最后更新时间') BIGINT(20)"`
-}
-
-func (o *ModelsInfo) TableName() string {
-	return "models_info"
-}

@@ -16,40 +16,40 @@ models:
         description: "Low quality image generation"
         sizes:
           - size: "1024x1024"
+            cost: 0.30
             price: 0.011
-            description: "Square 1024x1024 pixels"
           - size: "1024x1536"
+            cost: 0.30
             price: 0.016
-            description: "Portrait 1024x1536 pixels"
           - size: "1536x1024"
+            cost: 0.30
             price: 0.016
-            description: "Landscape 1536x1024 pixels"
 
       - quality: "medium"
         description: "Medium quality image generation"
         sizes:
           - size: "1024x1024"
+            cost: 0.30
             price: 0.042
-            description: "Square 1024x1024 pixels"
           - size: "1024x1536"
+            cost: 0.30
             price: 0.063
-            description: "Portrait 1024x1536 pixels"
           - size: "1536x1024"
+            cost: 0.30
             price: 0.063
-            description: "Landscape 1536x1024 pixels"
 
       - quality: "high"
         description: "High quality image generation"
         sizes:
           - size: "1024x1024"
+            cost: 0.30
             price: 0.167
-            description: "Square 1024x1024 pixels"
           - size: "1024x1536"
+            cost: 0.30
             price: 0.25
-            description: "Portrait 1024x1536 pixels"
           - size: "1536x1024"
+            cost: 0.30
             price: 0.25
-            description: "Landscape 1536x1024 pixels"
 
   # GPT Image 1 Mini Model
   - model: "gpt-image-1-mini"
@@ -60,40 +60,40 @@ models:
         description: "Low quality image generation"
         sizes:
           - size: "1024x1024"
+            cost: 0.30
             price: 0.005
-            description: "Square 1024x1024 pixels"
           - size: "1024x1536"
+            cost: 0.30
             price: 0.006
-            description: "Portrait 1024x1536 pixels"
           - size: "1536x1024"
+            cost: 0.30
             price: 0.006
-            description: "Landscape 1536x1024 pixels"
 
       - quality: "medium"
         description: "Medium quality image generation"
         sizes:
           - size: "1024x1024"
+            cost: 0.30
             price: 0.011
-            description: "Square 1024x1024 pixels"
           - size: "1024x1536"
+            cost: 0.30
             price: 0.015
-            description: "Portrait 1024x1536 pixels"
           - size: "1536x1024"
+            cost: 0.30
             price: 0.015
-            description: "Landscape 1536x1024 pixels"
 
       - quality: "high"
         description: "High quality image generation"
         sizes:
           - size: "1024x1024"
+            cost: 0.30
             price: 0.036
-            description: "Square 1024x1024 pixels"
           - size: "1024x1536"
+            cost: 0.30
             price: 0.052
-            description: "Portrait 1024x1536 pixels"
           - size: "1536x1024"
+            cost: 0.30
             price: 0.052
-            description: "Landscape 1536x1024 pixels"
 
   # DALL-E 3 Model
   - model: "dall-e-3"
@@ -104,27 +104,27 @@ models:
         description: "Standard quality image generation"
         sizes:
           - size: "1024x1024"
+            cost: 0.30
             price: 0.04
-            description: "Square 1024x1024 pixels"
           - size: "1024x1792"
+            cost: 0.30
             price: 0.08
-            description: "Portrait 1024x1792 pixels"
           - size: "1792x1024"
+            cost: 0.30
             price: 0.08
-            description: "Landscape 1792x1024 pixels"
 
       - quality: "hd"
         description: "HD quality image generation"
         sizes:
           - size: "1024x1024"
+            cost: 0.30
             price: 0.08
-            description: "Square 1024x1024 pixels"
           - size: "1024x1792"
+            cost: 0.30
             price: 0.12
-            description: "Portrait 1024x1792 pixels"
           - size: "1792x1024"
+            cost: 0.30
             price: 0.12
-            description: "Landscape 1792x1024 pixels"
 
   # DALL-E 2 Model
   - model: "dall-e-2"
@@ -135,11 +135,11 @@ models:
         description: "Standard quality image generation"
         sizes:
           - size: "256x256"
+            cost: 0.30
             price: 0.016
-            description: "Small 256x256 pixels"
           - size: "512x512"
+            cost: 0.30
             price: 0.018
-            description: "Medium 512x512 pixels"
           - size: "1024x1024"
+            cost: 0.30
             price: 0.02
-            description: "Large 1024x1024 pixels"

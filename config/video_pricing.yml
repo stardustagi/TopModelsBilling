@@ -13,11 +13,11 @@ models:
     enabled: true
     resolutions:
       - resolution: "720x1280"
-        price_per_second: 0.10
-        description: "Portrait 720x1280 pixels (HD)"
+        cost: 0.30
+        price: 0.10
       - resolution: "1280x720"
-        price_per_second: 0.10
-        description: "Landscape 1280x720 pixels (HD)"
+        cost: 0.30
+        price: 0.10
 
   # Sora 2 Pro Model
   - model: "sora-2-pro"
@@ -25,14 +25,14 @@ models:
     enabled: true
     resolutions:
       - resolution: "720x1280"
-        price_per_second: 0.30
-        description: "Portrait 720x1280 pixels (HD)"
+        cost: 0.30
+        price: 0.30
       - resolution: "1280x720"
-        price_per_second: 0.30
-        description: "Landscape 1280x720 pixels (HD)"
+        cost: 0.30
+        price: 0.30
       - resolution: "1024x1792"
-        price_per_second: 0.50
-        description: "Portrait 1024x1792 pixels (Full HD)"
+        cost: 0.30
+        price: 0.50
       - resolution: "1792x1024"
-        price_per_second: 0.50
-        description: "Landscape 1792x1024 pixels (Full HD)"
+        cost: 0.30
+        price: 0.50

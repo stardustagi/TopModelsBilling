@@ -17,9 +17,9 @@ func (m *FeeService) loadVideoPricing() (*config.VideoPricing, error) {
 }
 
 // calculateImageActualCost 计算图片生成的实际成本（用于成本统计）
-func (m *FeeService) calculateImageActualCost(inst FeeInstance) (int64, int64, error) {
-	totalPrice := int64(0)
-	totalCost := int64(0)
+func (m *FeeService) calculateImageActualCost(inst FeeInstance) (float64, float64, error) {
+	totalPrice := 0.0
+	totalCost := 0.0
 	usage, err := inst.ImageUsage()
 	if err != nil {
 		return 0, 0, err
@@ -30,8 +30,8 @@ func (m *FeeService) calculateImageActualCost(inst FeeInstance) (int64, int64, e
 		if err != nil {
 			return 0, 0, err
 		}
-		totalCost += int64(cost * 1000000) // 转换为微分单位
-		totalPrice += int64(price * 1000000)
+		totalCost += cost // 转换为微分单位
+		totalPrice += price
 	}
 
 	return totalPrice, totalCost, nil

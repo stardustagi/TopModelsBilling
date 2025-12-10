@@ -3,8 +3,10 @@ package services
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"sync"
 
+	"github.com/deepissue/fee_server/models"
 	"github.com/sirupsen/logrus"
 	"xorm.io/xorm"
 )
@@ -13,6 +15,10 @@ type PriceInfo struct {
 	InputPrice  int `json:"input_price"`  //输入token计费
 	OutputPrice int `json:"output_price"` //输出token计费
 	CachePrice  int `json:"cache_price"`  //缓存token计费
+
+	CostInputPrice  int `json:"cost_input_price"`  //输入token计费cost
+	CostOutputPrice int `json:"cost_output_price"` //输出token计费cost
+	CostCachePrice  int `json:"cose_cache_price"`  //缓存token计费cost
 }
 
 func (o PriceInfo) String() string {
@@ -36,7 +42,7 @@ func NewPriceService(ctx context.Context, xorm xorm.EngineInterface) *PriceServi
 
 // FetchProviderPrice 根据agentId、providerName、modelName获取价格信息
 // 先从本地info查找，找不到再去查询数据库，然后加入本地info
-func (m *PriceService) FetchProviderPrice(modelId int) (PriceInfo, bool) {
+func (m *PriceService) FetchProviderPrice(modelId int, providerId string) (PriceInfo, bool) {
 
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
@@ -51,7 +57,7 @@ func (m *PriceService) FetchProviderPrice(modelId int) (PriceInfo, bool) {
 		ProviderName string `xorm:"provider_name"`
 	}
 
-	var result ModelsInfo
+	var result models.ModelsInfo
 	has, err := m.xorm.Where("id = ?", modelId).Get(&result)
 
 	if err != nil {
@@ -62,14 +68,19 @@ func (m *PriceService) FetchProviderPrice(modelId int) (PriceInfo, bool) {
 		logrus.Errorf("failed to fetch price info for model_id %d not found", modelId)
 		return PriceInfo{}, false
 	}
+	var provider models.ModelsProvider
+	id, _ := strconv.Atoi(providerId)
+	m.xorm.Where("id = ?", id).Get(&provider)
 
 	// // 将查询结果加入本地缓存
 	priceInfo := PriceInfo{
-		InputPrice:  result.InputPrice,
-		OutputPrice: result.OutputPrice,
-		CachePrice:  result.CachePrice,
+		InputPrice:      result.InputPrice,
+		OutputPrice:     result.OutputPrice,
+		CachePrice:      result.CachePrice,
+		CostInputPrice:  provider.InputPrice,
+		CostOutputPrice: provider.OutputPrice,
+		CostCachePrice:  provider.CachePrice,
 	}
 	// m.PriceInfo[modelId] = priceInfo
-
 	return priceInfo, true
 }
