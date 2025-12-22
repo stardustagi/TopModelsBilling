@@ -21,6 +21,12 @@ type PriceInfo struct {
 	CostCachePrice  int `json:"cose_cache_price"`  //缓存token计费cost
 }
 
+type TieredPriceInfo struct {
+	InputPrice  int `json:"input_price"`
+	OutputPrice int `json:"output_price"`
+	CachePrice  int `json:"cache_price"`
+}
+
 func (o PriceInfo) String() string {
 	return fmt.Sprintf("<Price: input:%d, output:%d>", o.InputPrice, o.OutputPrice)
 }
@@ -83,4 +89,38 @@ func (m *PriceService) FetchProviderPrice(modelId int, providerId string) (Price
 	}
 	// m.PriceInfo[modelId] = priceInfo
 	return priceInfo, true
+}
+
+// FetchTieredPrice 根据模型ID和总token数获取阶梯价格
+func (m *PriceService) FetchTieredPrice(modelId int, totalTokens int64) (*TieredPriceInfo, bool) {
+	var tier models.ModelsTieredPricing
+	has, err := m.xorm.Where("model_id = ? AND tier_start <= ? AND (tier_end >= ? OR tier_end = -1)", modelId, totalTokens, totalTokens).
+		OrderBy("tier_start DESC").
+		Get(&tier)
+	if err != nil {
+		logrus.Errorf("failed to fetch tiered price for model_id %d, tokens %d: %v", modelId, totalTokens, err)
+		return nil, false
+	}
+	if !has {
+		return nil, false
+	}
+	return &TieredPriceInfo{
+		InputPrice:  tier.InputPrice,
+		OutputPrice: tier.OutputPrice,
+		CachePrice:  tier.CachePrice,
+	}, true
+}
+
+// FetchUserDiscount 获取用户折扣率，返回折扣率（100表示无折扣）
+func (m *PriceService) FetchUserDiscount(userId int64) int {
+	var discount models.UserDiscount
+	has, err := m.xorm.Where("user_id = ?", userId).Get(&discount)
+	if err != nil {
+		logrus.Errorf("failed to fetch user discount for user_id %d: %v", userId, err)
+		return 100
+	}
+	if !has {
+		return 100
+	}
+	return discount.DiscountRate
 }

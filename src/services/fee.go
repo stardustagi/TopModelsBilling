@@ -149,11 +149,28 @@ func (m *FeeService) deductTextFees(instances []FeeInstance) ([]*models.UserCons
 		}
 
 		usage, _ := inst.TextUsage()
-		inputValue := CalculateTokenCostMicro(usage.InputTokens, float64(inst.priceInfo.InputPrice))
-		outputValue := CalculateTokenCostMicro(usage.OutputTokens, float64(inst.priceInfo.OutputPrice))
-		cacheValue := CalculateTokenCostMicro(usage.CacheTokens, float64(inst.priceInfo.CachePrice))
+		totalTokens := usage.InputTokens + usage.OutputTokens + usage.CacheTokens
 
-		remainingValue := inputValue + outputValue + cacheValue
+		// 尝试获取阶梯价格
+		var inputPrice, outputPrice, cachePrice int
+		if tieredPrice, hasTiered := m.price.FetchTieredPrice(inst.data.ModelId, totalTokens); hasTiered {
+			inputPrice = tieredPrice.InputPrice
+			outputPrice = tieredPrice.OutputPrice
+			cachePrice = tieredPrice.CachePrice
+		} else {
+			inputPrice = inst.priceInfo.InputPrice
+			outputPrice = inst.priceInfo.OutputPrice
+			cachePrice = inst.priceInfo.CachePrice
+		}
+
+		// 获取用户折扣率
+		discountRate := m.price.FetchUserDiscount(inst.userId)
+
+		inputValue := CalculateTokenCostMicro(usage.InputTokens, float64(inputPrice))
+		outputValue := CalculateTokenCostMicro(usage.OutputTokens, float64(outputPrice))
+		cacheValue := CalculateTokenCostMicro(usage.CacheTokens, float64(cachePrice))
+
+		remainingValue := (inputValue + outputValue + cacheValue) * int64(discountRate) / 100
 		balance.Balance -= remainingValue
 
 		totalCost := CalculateTokenCostMicro(usage.InputTokens, float64(inst.priceInfo.CostInputPrice))
