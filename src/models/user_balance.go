@@ -12,6 +12,7 @@ type UserWallet struct {
 	WalletType    string `json:"wallet_type" xorm:"'wallet_type' VARCHAR(32)"`
 	WalletAddress string `json:"wallet_address" xorm:"'wallet_address' VARCHAR(255)"`
 	Balance       int64  `json:"balance" xorm:"'balance' BIGINT(12)"`
+	RebateBalance int64  `json:"rebate_balance" xorm:"'rebate_balance' BIGINT(12) default 0"`
 	CreatedAt     int64  `json:"created_at" xorm:"'created_at' BIGINT(12)"`
 	UpdatedAt     int64  `json:"updated_at" xorm:"'updated_at' BIGINT(20)"`
 }

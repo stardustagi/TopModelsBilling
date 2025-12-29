@@ -264,8 +264,18 @@ func (m *FeeService) deductTextFees(instances []FeeInstance) ([]*models.UserCons
 
 		remainingValue := (inputValue + outputValue + cacheValue) * int64(discountRate) / 100
 
-		// 优先从上月返点扣除
-		rebateDeducted, balanceDeducted := m.deductWithRebate(session, inst.userId, remainingValue)
+		// 优先从返点余额扣除
+		var rebateDeducted int64
+		if balance.RebateBalance > 0 {
+			if balance.RebateBalance >= remainingValue {
+				rebateDeducted = remainingValue
+				balance.RebateBalance -= remainingValue
+			} else {
+				rebateDeducted = balance.RebateBalance
+				balance.RebateBalance = 0
+			}
+		}
+		balanceDeducted := remainingValue - rebateDeducted
 		balance.Balance -= balanceDeducted
 
 		totalCost := CalculateTokenCostMicro(usage.InputTokens, float64(inst.priceInfo.CostInputPrice))
@@ -293,13 +303,14 @@ func (m *FeeService) deductTextFees(instances []FeeInstance) ([]*models.UserCons
 			ModelId:          inst.data.ModelId,
 			NodeId:           inst.data.NodeId,
 			TotalConsumed:    remainingValue,
+			RebateDeducted:   rebateDeducted,
+			BalanceDeducted:  balanceDeducted,
 			TotalCost:        totalCost,
 			ConsumeType:      "text",
 			ActualProvider:   inst.data.ActualProvider,
 			ActualProviderId: inst.data.ActualProviderId,
 			CreatedAt:        time.Now().Unix(),
 		}
-		_ = rebateDeducted // 可用于记录返点扣除金额
 		if _, err := session.InsertOne(&record); err != nil {
 			logrus.Errorf("insert record: %v", err)
 			return nil, err
@@ -317,31 +328,6 @@ func (m *FeeService) deductTextFees(instances []FeeInstance) ([]*models.UserCons
 	}
 
 	return consumes, nil
-}
-
-// deductWithRebate 优先从上月返点扣除，返回(返点扣除金额, 余额扣除金额)
-func (m *FeeService) deductWithRebate(session *xorm.Session, userId int64, amount int64) (int64, int64) {
-	lastMonth := time.Now().AddDate(0, -1, 0).Format("2006-01")
-	var rebate models.UserRebateMonthly
-	has, err := session.Where("user_id = ? AND month = ? AND status = 1", userId, lastMonth).Get(&rebate)
-	if err != nil || !has {
-		return 0, amount
-	}
-
-	available := rebate.RebateAmount - rebate.RebateUsed
-	if available <= 0 {
-		return 0, amount
-	}
-
-	if available >= amount {
-		rebate.RebateUsed += amount
-		session.ID(rebate.Id).Cols("rebate_used").Update(&rebate)
-		return amount, 0
-	}
-
-	rebate.RebateUsed = rebate.RebateAmount
-	session.ID(rebate.Id).Cols("rebate_used").Update(&rebate)
-	return available, amount - available
 }
 
 // addMonthlyConsumed 累加当月消费到返点记录
