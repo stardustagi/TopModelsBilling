@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/deepissue/core/server"
@@ -128,8 +129,106 @@ func (m *FeeService) Do(report LLMReportMessage) (bool, error) {
 
 	if len(allConsumes) > 0 {
 		m.mq.Publish(allConsumes)
+		// 更新供应商消费汇总
+		m.updateProviderSummary(allConsumes)
+		// 更新供应商模型日汇总
+		m.updateProviderModelDailySummary(allConsumes)
 	}
 	return false, nil
+}
+
+// updateProviderSummary 更新供应商消费汇总表
+func (m *FeeService) updateProviderSummary(consumes []*models.UserConsumeRecord) {
+	// 按供应商ID聚合
+	summaryMap := make(map[int]struct {
+		consumed int64
+		cost     int64
+	})
+	for _, c := range consumes {
+		providerId, err := strconv.Atoi(c.ActualProviderId)
+		if err != nil {
+			logrus.Warnf("invalid ActualProviderId: %s", c.ActualProviderId)
+			continue
+		}
+		s := summaryMap[providerId]
+		s.consumed += c.TotalConsumed
+		s.cost += c.TotalCost
+		summaryMap[providerId] = s
+	}
+
+	for providerId, s := range summaryMap {
+		summary := models.ProviderConsumeSummary{ActualProviderId: providerId}
+		has, err := m.xorm.Get(&summary)
+		if err != nil {
+			logrus.Errorf("get provider summary failed: %v", err)
+			continue
+		}
+		summary.TotalConsumed += s.consumed
+		summary.TotalCost += s.cost
+		summary.UpdatedAt = time.Now().Unix()
+
+		if has {
+			if _, err := m.xorm.ID(summary.ID).Cols("total_consumed", "total_cost", "updated_at").Update(&summary); err != nil {
+				logrus.Errorf("update provider summary failed: %v", err)
+			}
+		} else {
+			if _, err := m.xorm.InsertOne(&summary); err != nil {
+				logrus.Errorf("insert provider summary failed: %v", err)
+			}
+		}
+	}
+}
+
+// updateProviderModelDailySummary 更新供应商模型日汇总表
+func (m *FeeService) updateProviderModelDailySummary(consumes []*models.UserConsumeRecord) {
+	today := time.Now().Format("2006-01-02")
+	type key struct {
+		providerId  int
+		modelId     int
+		consumeType string
+	}
+	summaryMap := make(map[key]struct {
+		consumed int64
+		cost     int64
+	})
+	for _, c := range consumes {
+		providerId, err := strconv.Atoi(c.ActualProviderId)
+		if err != nil {
+			continue
+		}
+		k := key{providerId: providerId, modelId: c.ModelId, consumeType: c.ConsumeType}
+		s := summaryMap[k]
+		s.consumed += c.TotalConsumed
+		s.cost += c.TotalCost
+		summaryMap[k] = s
+	}
+
+	for k, s := range summaryMap {
+		summary := models.ProviderModelDailySummary{
+			ActualProviderId: k.providerId,
+			ModelId:          k.modelId,
+			ConsumeType:      k.consumeType,
+			Date:             today,
+		}
+		has, err := m.xorm.Where("actual_provider_id = ? AND model_id = ? AND consume_type = ? AND date = ?", k.providerId, k.modelId, k.consumeType, today).Get(&summary)
+		if err != nil {
+			logrus.Errorf("get daily summary failed: %v", err)
+			continue
+		}
+		summary.TotalConsumed += s.consumed
+		summary.TotalCost += s.cost
+		summary.UpdatedAt = time.Now().Unix()
+
+		if has {
+			if _, err := m.xorm.ID(summary.ID).Cols("total_consumed", "total_cost", "updated_at").Update(&summary); err != nil {
+				logrus.Errorf("update daily summary failed: %v", err)
+			}
+		} else {
+			if _, err := m.xorm.InsertOne(&summary); err != nil {
+				logrus.Errorf("insert daily summary failed: %v", err)
+			}
+		}
+	}
 }
 
 func (m *FeeService) deductTextFees(instances []FeeInstance) ([]*models.UserConsumeRecord, error) {
@@ -193,10 +292,10 @@ func (m *FeeService) deductTextFees(instances []FeeInstance) ([]*models.UserCons
 			ModelId:          inst.data.ModelId,
 			NodeId:           inst.data.NodeId,
 			TotalConsumed:    remainingValue,
+			TotalCost:        totalCost,
 			ConsumeType:      "text",
 			ActualProvider:   inst.data.ActualProvider,
 			ActualProviderId: inst.data.ActualProviderId,
-			TotalCost:        totalCost,
 			CreatedAt:        time.Now().Unix(),
 		}
 		if _, err := session.InsertOne(&record); err != nil {
@@ -253,10 +352,10 @@ func (m *FeeService) deductImageFees(instances []FeeInstance) ([]*models.UserCon
 			ModelId:          inst.data.ModelId,
 			NodeId:           inst.data.NodeId,
 			TotalConsumed:    totalConsumed,
+			TotalCost:        totalCost,
 			ConsumeType:      "image",
 			ActualProvider:   inst.data.ActualProvider,
 			ActualProviderId: inst.data.ActualProviderId,
-			TotalCost:        totalCost,
 			CreatedAt:        time.Now().Unix(),
 		}
 		if _, err := session.InsertOne(&record); err != nil {
@@ -320,7 +419,8 @@ func (m *FeeService) deductVideoFees(instances []FeeInstance) ([]*models.UserCon
 			Model:            inst.data.Model,
 			ModelId:          inst.data.ModelId,
 			NodeId:           inst.data.NodeId,
-			TotalConsumed:    totalCost,
+			TotalConsumed:    totalConsumed,
+			TotalCost:        totalCost,
 			ConsumeType:      "video",
 			ActualProvider:   inst.data.ActualProvider,
 			ActualProviderId: inst.data.ActualProviderId,
