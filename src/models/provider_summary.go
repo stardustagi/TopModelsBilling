@@ -16,6 +16,7 @@ func (ProviderConsumeSummary) TableName() string {
 // ProviderModelDailySummary 供应商模型日消费汇总表
 type ProviderModelDailySummary struct {
 	ID               int64  `xorm:"pk autoincr comment('主键，自增')" json:"id"`
+	UserId           int64  `xorm:"bigint notnull comment('用户ID')" json:"user_id"`
 	ActualProviderId int    `xorm:"int notnull comment('实际服务商ID')" json:"actual_provider_id"`
 	ModelId          int    `xorm:"int notnull comment('模型ID')" json:"model_id"`
 	ConsumeType      string `xorm:"varchar(32) notnull comment('消费类型')" json:"consume_type"`

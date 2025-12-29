@@ -183,6 +183,7 @@ func (m *FeeService) updateProviderSummary(consumes []*models.UserConsumeRecord)
 func (m *FeeService) updateProviderModelDailySummary(consumes []*models.UserConsumeRecord) {
 	today := time.Now().Format("2006-01-02")
 	type key struct {
+		userId      int64
 		providerId  int
 		modelId     int
 		consumeType string
@@ -196,7 +197,7 @@ func (m *FeeService) updateProviderModelDailySummary(consumes []*models.UserCons
 		if err != nil {
 			continue
 		}
-		k := key{providerId: providerId, modelId: c.ModelId, consumeType: c.ConsumeType}
+		k := key{userId: c.UserId, providerId: providerId, modelId: c.ModelId, consumeType: c.ConsumeType}
 		s := summaryMap[k]
 		s.consumed += c.TotalConsumed
 		s.cost += c.TotalCost
@@ -205,12 +206,13 @@ func (m *FeeService) updateProviderModelDailySummary(consumes []*models.UserCons
 
 	for k, s := range summaryMap {
 		summary := models.ProviderModelDailySummary{
+			UserId:           k.userId,
 			ActualProviderId: k.providerId,
 			ModelId:          k.modelId,
 			ConsumeType:      k.consumeType,
 			Date:             today,
 		}
-		has, err := m.xorm.Where("actual_provider_id = ? AND model_id = ? AND consume_type = ? AND date = ?", k.providerId, k.modelId, k.consumeType, today).Get(&summary)
+		has, err := m.xorm.Where("user_id = ? AND actual_provider_id = ? AND model_id = ? AND consume_type = ? AND date = ?", k.userId, k.providerId, k.modelId, k.consumeType, today).Get(&summary)
 		if err != nil {
 			logrus.Errorf("get daily summary failed: %v", err)
 			continue
