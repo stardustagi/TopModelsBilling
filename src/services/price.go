@@ -21,12 +21,6 @@ type PriceInfo struct {
 	CostCachePrice  int `json:"cose_cache_price"`  //缓存token计费cost
 }
 
-type TieredPriceInfo struct {
-	InputPrice  int `json:"input_price"`
-	OutputPrice int `json:"output_price"`
-	CachePrice  int `json:"cache_price"`
-}
-
 func (o PriceInfo) String() string {
 	return fmt.Sprintf("<Price: input:%d, output:%d>", o.InputPrice, o.OutputPrice)
 }
@@ -91,36 +85,32 @@ func (m *PriceService) FetchProviderPrice(modelId int, providerId string) (Price
 	return priceInfo, true
 }
 
-// FetchTieredPrice 根据模型ID和总token数获取阶梯价格
-func (m *PriceService) FetchTieredPrice(modelId int, totalTokens int64) (*TieredPriceInfo, bool) {
-	var tier models.ModelsTieredPricing
-	has, err := m.xorm.Where("model_id = ? AND tier_start <= ? AND (tier_end >= ? OR tier_end = -1)", modelId, totalTokens, totalTokens).
-		OrderBy("tier_start DESC").
-		Get(&tier)
-	if err != nil {
-		logrus.Errorf("failed to fetch tiered price for model_id %d, tokens %d: %v", modelId, totalTokens, err)
-		return nil, false
-	}
-	if !has {
-		return nil, false
-	}
-	return &TieredPriceInfo{
-		InputPrice:  tier.InputPrice,
-		OutputPrice: tier.OutputPrice,
-		CachePrice:  tier.CachePrice,
-	}, true
-}
-
 // FetchUserDiscount 获取用户折扣率，返回折扣率（100表示无折扣）
-func (m *PriceService) FetchUserDiscount(userId int64) int {
+func (m *PriceService) FetchUserDiscount(userId int64, modelId int) int {
 	var discount models.UserDiscount
-	has, err := m.xorm.Where("user_id = ?", userId).Get(&discount)
+	has, err := m.xorm.Where("user_id = ? AND model_id = ?", userId, modelId).Get(&discount)
 	if err != nil {
-		logrus.Errorf("failed to fetch user discount for user_id %d: %v", userId, err)
+		logrus.Errorf("failed to fetch user discount for user_id %d, model_id %d: %v", userId, modelId, err)
 		return 100
 	}
 	if !has {
 		return 100
 	}
 	return discount.DiscountRate
+}
+
+// FetchUserRebateRate 根据用户消费金额获取返点比例
+func (m *PriceService) FetchUserRebateRate(userId int64, consumed int64) int {
+	var config models.UserRebateConfig
+	has, err := m.xorm.Where("user_id = ? AND status = 1 AND tier_start <= ? AND (tier_end >= ? OR tier_end = -1)", userId, consumed, consumed).
+		OrderBy("tier_start DESC").
+		Get(&config)
+	if err != nil {
+		logrus.Errorf("failed to fetch rebate config for user_id %d: %v", userId, err)
+		return 0
+	}
+	if !has {
+		return 0
+	}
+	return config.RebateRate
 }

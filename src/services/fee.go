@@ -250,29 +250,23 @@ func (m *FeeService) deductTextFees(instances []FeeInstance) ([]*models.UserCons
 		}
 
 		usage, _ := inst.TextUsage()
-		totalTokens := usage.InputTokens + usage.OutputTokens + usage.CacheTokens
 
-		// 尝试获取阶梯价格
-		var inputPrice, outputPrice, cachePrice int
-		if tieredPrice, hasTiered := m.price.FetchTieredPrice(inst.data.ModelId, totalTokens); hasTiered {
-			inputPrice = tieredPrice.InputPrice
-			outputPrice = tieredPrice.OutputPrice
-			cachePrice = tieredPrice.CachePrice
-		} else {
-			inputPrice = inst.priceInfo.InputPrice
-			outputPrice = inst.priceInfo.OutputPrice
-			cachePrice = inst.priceInfo.CachePrice
-		}
+		inputPrice := inst.priceInfo.InputPrice
+		outputPrice := inst.priceInfo.OutputPrice
+		cachePrice := inst.priceInfo.CachePrice
 
 		// 获取用户折扣率
-		discountRate := m.price.FetchUserDiscount(inst.userId)
+		discountRate := m.price.FetchUserDiscount(inst.userId, inst.data.ModelId)
 
 		inputValue := CalculateTokenCostMicro(usage.InputTokens, float64(inputPrice))
 		outputValue := CalculateTokenCostMicro(usage.OutputTokens, float64(outputPrice))
 		cacheValue := CalculateTokenCostMicro(usage.CacheTokens, float64(cachePrice))
 
 		remainingValue := (inputValue + outputValue + cacheValue) * int64(discountRate) / 100
-		balance.Balance -= remainingValue
+
+		// 优先从上月返点扣除
+		rebateDeducted, balanceDeducted := m.deductWithRebate(session, inst.userId, remainingValue)
+		balance.Balance -= balanceDeducted
 
 		totalCost := CalculateTokenCostMicro(usage.InputTokens, float64(inst.priceInfo.CostInputPrice))
 		totalCost += CalculateTokenCostMicro(usage.OutputTokens, float64(inst.priceInfo.CostOutputPrice))
@@ -285,6 +279,11 @@ func (m *FeeService) deductTextFees(instances []FeeInstance) ([]*models.UserCons
 		}
 		if rows == 0 {
 			return nil, fmt.Errorf("failed to update user balance: %d, cost: %d", inst.userId, remainingValue)
+		}
+
+		// 只有从余额扣除的部分才计入当月返点累加
+		if balanceDeducted > 0 {
+			m.addMonthlyConsumed(session, inst.userId, balanceDeducted)
 		}
 
 		//保存扣费记录
@@ -300,6 +299,7 @@ func (m *FeeService) deductTextFees(instances []FeeInstance) ([]*models.UserCons
 			ActualProviderId: inst.data.ActualProviderId,
 			CreatedAt:        time.Now().Unix(),
 		}
+		_ = rebateDeducted // 可用于记录返点扣除金额
 		if _, err := session.InsertOne(&record); err != nil {
 			logrus.Errorf("insert record: %v", err)
 			return nil, err
@@ -317,6 +317,54 @@ func (m *FeeService) deductTextFees(instances []FeeInstance) ([]*models.UserCons
 	}
 
 	return consumes, nil
+}
+
+// deductWithRebate 优先从上月返点扣除，返回(返点扣除金额, 余额扣除金额)
+func (m *FeeService) deductWithRebate(session *xorm.Session, userId int64, amount int64) (int64, int64) {
+	lastMonth := time.Now().AddDate(0, -1, 0).Format("2006-01")
+	var rebate models.UserRebateMonthly
+	has, err := session.Where("user_id = ? AND month = ? AND status = 1", userId, lastMonth).Get(&rebate)
+	if err != nil || !has {
+		return 0, amount
+	}
+
+	available := rebate.RebateAmount - rebate.RebateUsed
+	if available <= 0 {
+		return 0, amount
+	}
+
+	if available >= amount {
+		rebate.RebateUsed += amount
+		session.ID(rebate.Id).Cols("rebate_used").Update(&rebate)
+		return amount, 0
+	}
+
+	rebate.RebateUsed = rebate.RebateAmount
+	session.ID(rebate.Id).Cols("rebate_used").Update(&rebate)
+	return available, amount - available
+}
+
+// addMonthlyConsumed 累加当月消费到返点记录
+func (m *FeeService) addMonthlyConsumed(session *xorm.Session, userId int64, consumed int64) {
+	currentMonth := time.Now().Format("2006-01")
+	var monthly models.UserRebateMonthly
+	has, _ := session.Where("user_id = ? AND month = ?", userId, currentMonth).Get(&monthly)
+
+	if has {
+		monthly.TotalConsumed += consumed
+		monthly.UpdatedAt = time.Now().Unix()
+		session.ID(monthly.Id).Cols("total_consumed", "updated_at").Update(&monthly)
+	} else {
+		monthly = models.UserRebateMonthly{
+			UserId:        userId,
+			Month:         currentMonth,
+			TotalConsumed: consumed,
+			Status:        0,
+			CreatedAt:     time.Now().Unix(),
+			UpdatedAt:     time.Now().Unix(),
+		}
+		session.InsertOne(&monthly)
+	}
 }
 
 func (m *FeeService) deductImageFees(instances []FeeInstance) ([]*models.UserConsumeRecord, error) {

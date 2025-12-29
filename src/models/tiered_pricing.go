@@ -16,9 +16,26 @@ func (o *ModelsTieredPricing) TableName() string {
 	return "models_tiered_pricing"
 }
 
+// DiscountRule 折扣规则配置表
+type DiscountRule struct {
+	Id           int64  `json:"id" xorm:"'id' pk autoincr BIGINT(20)"`
+	Name         string `json:"name" xorm:"'name' VARCHAR(128)"`
+	Description  string `json:"description" xorm:"'description' VARCHAR(512)"`
+	DiscountRate int    `json:"discount_rate" xorm:"'discount_rate' INT(10)"`
+	Status       int    `json:"status" xorm:"'status' INT(10) default 1"`
+	CreatedAt    int64  `json:"created_at" xorm:"'created_at' BIGINT(20)"`
+	UpdatedAt    int64  `json:"updated_at" xorm:"'updated_at' BIGINT(20)"`
+}
+
+func (o *DiscountRule) TableName() string {
+	return "discount_rule"
+}
+
 type UserDiscount struct {
 	Id           int64 `json:"id" xorm:"'id' pk autoincr BIGINT(20)"`
 	UserId       int64 `json:"user_id" xorm:"'user_id' BIGINT(20)"`
+	ModelId      int   `json:"model_id" xorm:"'model_id' INT(10)"`
+	RuleId       int64 `json:"rule_id" xorm:"'rule_id' BIGINT(20)"`
 	DiscountRate int   `json:"discount_rate" xorm:"'discount_rate' INT(10)"`
 	CreatedAt    int64 `json:"created_at" xorm:"'created_at' BIGINT(20)"`
 	UpdatedAt    int64 `json:"updated_at" xorm:"'updated_at' BIGINT(20)"`
