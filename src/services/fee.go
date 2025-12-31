@@ -384,8 +384,9 @@ func (m *FeeService) deductImageFees(instances []FeeInstance) ([]*models.UserCon
 			return nil, err
 		}
 
-		totalCost := CalculateTokenCostMicro(1, cost)
-		totalConsumed := CalculateTokenCostMicro(1, price)
+		// 图片价格是直接的美元单价，直接乘以 MICRO 转换为微代币
+		totalCost := int64(cost*MICRO + 0.5)
+		totalConsumed := int64(price*MICRO + 0.5)
 
 		balance.Balance -= totalConsumed
 
@@ -452,8 +453,9 @@ func (m *FeeService) deductVideoFees(instances []FeeInstance) ([]*models.UserCon
 			return nil, err
 		}
 
-		totalCost := CalculateTokenCostMicro(1, cost)
-		totalConsumed := CalculateTokenCostMicro(1, price)
+		// 视频价格是直接的美元单价，直接乘以 MICRO 转换为微代币
+		totalCost := int64(cost*MICRO + 0.5)
+		totalConsumed := int64(price*MICRO + 0.5)
 
 		balance.Balance -= totalConsumed
 

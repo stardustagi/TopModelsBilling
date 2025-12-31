@@ -15,11 +15,11 @@ type VideoPricing struct {
 type VideoModel struct {
 	Model    string      `yaml:"model"`
 	Category string      `yaml:"category"`
-	Sizes    []VideoSize `yaml:"sizes"`
+	Sizes    []VideoSize `yaml:"resolutions"`
 }
 
 type VideoSize struct {
-	Size      string          `yaml:"size"`
+	Size      string          `yaml:"resolution"`
 	Durations []VideoDuration `yaml:"durations"`
 }
 
