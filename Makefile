@@ -30,7 +30,7 @@ run: tidy
 
 
 run-prod: build
-	$(PWD)/$(BUILD_DIR)/$(BINARY_NAME) start --application fee --profile prod --config ../config/server-prod.hcl --log.level=debug --log.path ../logs
+	$(PWD)/$(BUILD_DIR)/$(BINARY_NAME) start --application fee --profile prod --config config/server-prod.hcl --log.level=debug --log.path logs
 
 publish: build
 	echo 1
