@@ -93,7 +93,7 @@ func (m *FeeService) Do(report LLMReportMessage) (bool, error) {
 		default:
 			priceInfo, has := m.price.FetchProviderPrice(usage.ModelId, usage.ActualProviderId)
 			if !has {
-				return false, fmt.Errorf("model price not found: %s, %s", usage.ModelId, usage.Model)
+				return false, fmt.Errorf("model price not found: %d, %s", usage.ModelId, usage.Model)
 			}
 			inst.priceInfo = priceInfo
 			textInstances = append(textInstances, inst)
@@ -169,7 +169,7 @@ func (m *FeeService) updateProviderSummary(consumes []*models.UserConsumeRecord)
 		summary.UpdatedAt = time.Now().Unix()
 
 		if has {
-			if _, err := m.xorm.ID(summary.ID).Cols("total_consumed", "total_cost", "updated_at").Update(&summary); err != nil {
+			if _, err := m.xorm.ID(summary.Id).Cols("total_consumed", "total_cost", "updated_at").Update(&summary); err != nil {
 				logrus.Errorf("update provider summary failed: %v", err)
 			}
 		} else {
@@ -223,7 +223,7 @@ func (m *FeeService) updateProviderModelDailySummary(consumes []*models.UserCons
 		summary.UpdatedAt = time.Now().Unix()
 
 		if has {
-			if _, err := m.xorm.ID(summary.ID).Cols("total_consumed", "total_cost", "updated_at").Update(&summary); err != nil {
+			if _, err := m.xorm.ID(summary.Id).Cols("total_consumed", "total_cost", "updated_at").Update(&summary); err != nil {
 				logrus.Errorf("update daily summary failed: %v", err)
 			}
 		} else {
