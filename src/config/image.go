@@ -14,7 +14,6 @@ type ImagePricing struct {
 
 type Model struct {
 	Model     string    `yaml:"model"`
-	Enabled   bool      `yaml:"enabled"`
 	Category  string    `yaml:"category"`
 	Qualities []Quality `yaml:"qualities"`
 }
@@ -46,7 +45,7 @@ func LoadImagePricing(filePath string) (*ImagePricing, error) {
 
 func (ip *ImagePricing) GetPrice(model, quality, size string) float64 {
 	for _, m := range ip.Models {
-		if m.Model == model && m.Enabled {
+		if m.Model == model {
 			for _, q := range m.Qualities {
 				if q.Quality == quality {
 					for _, s := range q.Sizes {
@@ -63,7 +62,7 @@ func (ip *ImagePricing) GetPrice(model, quality, size string) float64 {
 
 func (ip *ImagePricing) GetCost(model, quality, size string) float64 {
 	for _, m := range ip.Models {
-		if m.Model == model && m.Enabled {
+		if m.Model == model {
 			for _, q := range m.Qualities {
 				if q.Quality == quality {
 					for _, s := range q.Sizes {
@@ -80,7 +79,7 @@ func (ip *ImagePricing) GetCost(model, quality, size string) float64 {
 
 func (ip *ImagePricing) GetPriceAndCost(model, quality, size string) (float64, float64) {
 	for _, m := range ip.Models {
-		if m.Model == model && m.Enabled {
+		if m.Model == model {
 			for _, q := range m.Qualities {
 				if q.Quality == quality {
 					for _, s := range q.Sizes {
@@ -93,13 +92,4 @@ func (ip *ImagePricing) GetPriceAndCost(model, quality, size string) (float64, f
 		}
 	}
 	return 0, 0
-}
-
-func (ip *ImagePricing) IsModelEnabled(model string) bool {
-	for _, m := range ip.Models {
-		if m.Model == model {
-			return m.Enabled
-		}
-	}
-	return false
 }

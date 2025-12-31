@@ -12,7 +12,7 @@ func (m *FeeService) calculateVideoActualCost(inst FeeInstance) (float64, float6
 		return 0, 0, err
 	}
 	// 如果有图片定价配置，使用cost字段
-	price, cost, err := m.getVideoPriceAndCost(inst.data.Model, usage.Size, usage.Seconds)
+	price, cost, err := m.getVideoPriceAndCost(inst.data.Model, usage.Size, int(usage.Seconds))
 	if err != nil {
 		return 0, 0, err
 	}
@@ -23,7 +23,7 @@ func (m *FeeService) calculateVideoActualCost(inst FeeInstance) (float64, float6
 }
 
 // getImagePriceAndCost 同时获取图片价格和成本
-func (m *FeeService) getVideoPriceAndCost(model, size string, seconds float64) (float64, float64, error) {
+func (m *FeeService) getVideoPriceAndCost(model, size string, seconds int) (float64, float64, error) {
 	// 加载图片定价配置
 	videoPricing, err := m.loadVideoPricing()
 	if err != nil {

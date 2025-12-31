@@ -14,7 +14,6 @@ type VideoPricing struct {
 
 type VideoModel struct {
 	Model    string      `yaml:"model"`
-	Enabled  bool        `yaml:"enabled"`
 	Category string      `yaml:"category"`
 	Sizes    []VideoSize `yaml:"sizes"`
 }
@@ -25,7 +24,7 @@ type VideoSize struct {
 }
 
 type VideoDuration struct {
-	Duration float64 `yaml:"duration"` // 固定时长，如5、15、30、60秒，0表示按秒计费
+	Duration int     `yaml:"duration"` // 固定时长，如5、15、30、60秒，0表示按秒计费
 	Price    float64 `yaml:"price"`    // 这个时长的总价格(如果duration=0则是每秒价格)
 	Cost     float64 `yaml:"cost"`     // 这个时长的总成本(如果duration=0则是每秒成本)
 }
@@ -44,9 +43,9 @@ func LoadVideoPricing(filePath string) (*VideoPricing, error) {
 	return &config, nil
 }
 
-func (vp *VideoPricing) GetPrice(model, size string, seconds float64) float64 {
+func (vp *VideoPricing) GetPrice(model, size string, seconds int) float64 {
 	for _, m := range vp.Models {
-		if m.Model == model && m.Enabled {
+		if m.Model == model {
 			for _, s := range m.Sizes {
 				if s.Size == size {
 					// 查找精确匹配的duration
@@ -58,7 +57,7 @@ func (vp *VideoPricing) GetPrice(model, size string, seconds float64) float64 {
 					// 没找到精确匹配，查找duration=0的default配置
 					for _, d := range s.Durations {
 						if d.Duration == 0 {
-							return d.Price * seconds // 按秒计费
+							return d.Price * float64(seconds) // 按秒计费
 						}
 					}
 				}
@@ -68,9 +67,9 @@ func (vp *VideoPricing) GetPrice(model, size string, seconds float64) float64 {
 	return 0
 }
 
-func (vp *VideoPricing) GetCost(model, size string, seconds float64) float64 {
+func (vp *VideoPricing) GetCost(model, size string, seconds int) float64 {
 	for _, m := range vp.Models {
-		if m.Model == model && m.Enabled {
+		if m.Model == model {
 			for _, s := range m.Sizes {
 				if s.Size == size {
 					// 查找精确匹配的duration
@@ -82,7 +81,7 @@ func (vp *VideoPricing) GetCost(model, size string, seconds float64) float64 {
 					// 没找到精确匹配，查找duration=0的default配置
 					for _, d := range s.Durations {
 						if d.Duration == 0 {
-							return d.Cost * seconds // 按秒计费
+							return d.Cost * float64(seconds) // 按秒计费
 						}
 					}
 				}
@@ -92,9 +91,9 @@ func (vp *VideoPricing) GetCost(model, size string, seconds float64) float64 {
 	return 0
 }
 
-func (vp *VideoPricing) GetPriceAndCost(model, size string, seconds float64) (float64, float64) {
+func (vp *VideoPricing) GetPriceAndCost(model, size string, seconds int) (float64, float64) {
 	for _, m := range vp.Models {
-		if m.Model == model && m.Enabled {
+		if m.Model == model {
 			for _, s := range m.Sizes {
 				if s.Size == size {
 					// 查找精确匹配的duration
@@ -106,7 +105,7 @@ func (vp *VideoPricing) GetPriceAndCost(model, size string, seconds float64) (fl
 					// 没找到精确匹配，查找duration=0的default配置
 					for _, d := range s.Durations {
 						if d.Duration == 0 {
-							return d.Price * seconds, d.Cost * seconds // 按秒计费
+							return d.Price * float64(seconds), d.Cost * float64(seconds) // 按秒计费
 						}
 					}
 				}
@@ -114,13 +113,4 @@ func (vp *VideoPricing) GetPriceAndCost(model, size string, seconds float64) (fl
 		}
 	}
 	return 0, 0
-}
-
-func (vp *VideoPricing) IsModelEnabled(model string) bool {
-	for _, m := range vp.Models {
-		if m.Model == model {
-			return m.Enabled
-		}
-	}
-	return false
 }
