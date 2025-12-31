@@ -33,4 +33,7 @@ CREATE TABLE IF NOT EXISTS `provider_model_daily_summary` (
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '供应商模型日消费汇总表';
 
 ALTER TABLE provider_consume_summary
+ADD month varchar(7) after actual_provider_id;
+
+ALTER TABLE provider_consume_summary
 ADD UNIQUE INDEX idx_provider_month (actual_provider_id, month);
