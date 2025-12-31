@@ -242,7 +242,6 @@ func (m *FeeService) deductTextFees(instances []FeeInstance) ([]*models.UserCons
 	}
 	var consumes []*models.UserConsumeRecord
 	for _, inst := range instances {
-		var details []models.UserConsumeRecord
 		balance := models.UserWallet{UserId: inst.userId}
 		if has, err := session.Get(&balance); err != nil {
 			return nil, err
@@ -316,12 +315,23 @@ func (m *FeeService) deductTextFees(instances []FeeInstance) ([]*models.UserCons
 			logrus.Errorf("insert record: %v", err)
 			return nil, err
 		}
-		if len(details) > 0 {
-			if _, err := session.InsertMulti(&details); err != nil {
-				logrus.Errorf("insert detail records: %v", err)
-				return nil, err
-			}
+
+		// 保存文本消费明细
+		detail := models.UserConsumeDetailText{
+			ConsumdId:    record.ID,
+			InputTokens:  usage.InputTokens,
+			OutputTokens: usage.OutputTokens,
+			CacheTokens:  usage.CacheTokens,
+			InputPrice:   inputPrice,
+			OutputPrice:  outputPrice,
+			CachePrice:   cachePrice,
+			CreatedAt:    time.Now().Unix(),
 		}
+		if _, err := session.InsertOne(&detail); err != nil {
+			logrus.Errorf("insert text detail record: %v", err)
+			return nil, err
+		}
+
 		consumes = append(consumes, &record)
 	}
 	if err := session.Commit(); err != nil {
