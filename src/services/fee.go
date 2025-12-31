@@ -388,10 +388,27 @@ func (m *FeeService) deductImageFees(instances []FeeInstance) ([]*models.UserCon
 		totalCost := int64(cost*MICRO + 0.5)
 		totalConsumed := int64(price*MICRO + 0.5)
 
-		balance.Balance -= totalConsumed
+		// 优先从返点余额扣除
+		var rebateDeducted int64
+		if balance.RebateBalance > 0 {
+			if balance.RebateBalance >= totalConsumed {
+				rebateDeducted = totalConsumed
+				balance.RebateBalance -= totalConsumed
+			} else {
+				rebateDeducted = balance.RebateBalance
+				balance.RebateBalance = 0
+			}
+		}
+		balanceDeducted := totalConsumed - rebateDeducted
+		balance.Balance -= balanceDeducted
 
 		if _, err := session.ID(balance.Id).Update(&balance); err != nil {
 			return nil, err
+		}
+
+		// 只有从余额扣除的部分才计入当月返点累加
+		if balanceDeducted > 0 {
+			m.addMonthlyConsumed(session, inst.userId, balanceDeducted)
 		}
 
 		record := models.UserConsumeRecord{
@@ -400,6 +417,8 @@ func (m *FeeService) deductImageFees(instances []FeeInstance) ([]*models.UserCon
 			ModelId:          inst.data.ModelId,
 			NodeId:           inst.data.NodeId,
 			TotalConsumed:    totalConsumed,
+			RebateDeducted:   rebateDeducted,
+			BalanceDeducted:  balanceDeducted,
 			TotalCost:        totalCost,
 			ConsumeType:      "image",
 			ActualProvider:   inst.data.ActualProvider,
@@ -457,10 +476,27 @@ func (m *FeeService) deductVideoFees(instances []FeeInstance) ([]*models.UserCon
 		totalCost := int64(cost*MICRO + 0.5)
 		totalConsumed := int64(price*MICRO + 0.5)
 
-		balance.Balance -= totalConsumed
+		// 优先从返点余额扣除
+		var rebateDeducted int64
+		if balance.RebateBalance > 0 {
+			if balance.RebateBalance >= totalConsumed {
+				rebateDeducted = totalConsumed
+				balance.RebateBalance -= totalConsumed
+			} else {
+				rebateDeducted = balance.RebateBalance
+				balance.RebateBalance = 0
+			}
+		}
+		balanceDeducted := totalConsumed - rebateDeducted
+		balance.Balance -= balanceDeducted
 
 		if _, err := session.ID(balance.Id).Update(&balance); err != nil {
 			return nil, err
+		}
+
+		// 只有从余额扣除的部分才计入当月返点累加
+		if balanceDeducted > 0 {
+			m.addMonthlyConsumed(session, inst.userId, balanceDeducted)
 		}
 
 		record := models.UserConsumeRecord{
@@ -469,6 +505,8 @@ func (m *FeeService) deductVideoFees(instances []FeeInstance) ([]*models.UserCon
 			ModelId:          inst.data.ModelId,
 			NodeId:           inst.data.NodeId,
 			TotalConsumed:    totalConsumed,
+			RebateDeducted:   rebateDeducted,
+			BalanceDeducted:  balanceDeducted,
 			TotalCost:        totalCost,
 			ConsumeType:      "video",
 			ActualProvider:   inst.data.ActualProvider,
