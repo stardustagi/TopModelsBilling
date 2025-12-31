@@ -139,6 +139,7 @@ func (m *FeeService) Do(report LLMReportMessage) (bool, error) {
 
 // updateProviderSummary 更新供应商消费汇总表
 func (m *FeeService) updateProviderSummary(consumes []*models.UserConsumeRecord) {
+	currentMonth := time.Now().Format("2006-01")
 	// 按供应商ID聚合
 	summaryMap := make(map[int]struct {
 		consumed int64
@@ -157,8 +158,8 @@ func (m *FeeService) updateProviderSummary(consumes []*models.UserConsumeRecord)
 	}
 
 	for providerId, s := range summaryMap {
-		summary := models.ProviderConsumeSummary{ActualProviderId: providerId}
-		has, err := m.xorm.Get(&summary)
+		summary := models.ProviderConsumeSummary{ActualProviderId: providerId, Month: currentMonth}
+		has, err := m.xorm.Where("actual_provider_id = ? AND month = ?", providerId, currentMonth).Get(&summary)
 		if err != nil {
 			logrus.Errorf("get provider summary failed: %v", err)
 			continue

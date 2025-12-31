@@ -2,11 +2,12 @@ package models
 
 // ProviderConsumeSummary 供应商消费汇总表
 type ProviderConsumeSummary struct {
-	ID               int64 `xorm:"pk autoincr comment('主键，自增')" json:"id"`
-	ActualProviderId int   `xorm:"int notnull unique comment('实际服务商ID')" json:"actual_provider_id"`
-	TotalConsumed    int64 `xorm:"bigint default 0 comment('总消费金额')" json:"total_consumed"`
-	TotalCost        int64 `xorm:"bigint default 0 comment('总成本')" json:"total_cost"`
-	UpdatedAt        int64 `xorm:"updated_at comment('更新时间')" json:"updated_at"`
+	ID               int64  `xorm:"pk autoincr comment('主键，自增')" json:"id"`
+	ActualProviderId int    `xorm:"int notnull comment('实际服务商ID')" json:"actual_provider_id"`
+	Month            string `xorm:"varchar(7) notnull comment('月份YYYY-MM')" json:"month"`
+	TotalConsumed    int64  `xorm:"bigint default 0 comment('总消费金额')" json:"total_consumed"`
+	TotalCost        int64  `xorm:"bigint default 0 comment('总成本')" json:"total_cost"`
+	UpdatedAt        int64  `xorm:"updated_at comment('更新时间')" json:"updated_at"`
 }
 
 func (ProviderConsumeSummary) TableName() string {
