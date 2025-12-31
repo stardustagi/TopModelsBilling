@@ -13,11 +13,27 @@ models:
     enabled: true
     resolutions:
       - resolution: "720x1280"
-        cost: 0.30
-        price: 0.10
+        durations:
+          - duration: 4
+            cost: 2.88
+            price: 2.88
+          - duration: 8
+            cost: 5.76
+            price: 5.76
+          - duration: 12
+            cost: 8.64
+            price: 8.64
       - resolution: "1280x720"
-        cost: 0.30
-        price: 0.10
+        durations:
+          - duration: 4
+            cost: 2.88
+            price: 2.88
+          - duration: 8
+            cost: 5.76
+            price: 5.76
+          - duration: 12
+            cost: 8.64
+            price: 8.64
 
   # Sora 2 Pro Model
   - model: "sora-2-pro"
@@ -25,14 +41,46 @@ models:
     enabled: true
     resolutions:
       - resolution: "720x1280"
-        cost: 0.30
-        price: 0.30
+        durations:
+          - duration: 4
+            cost: 8.64
+            price: 8.64
+          - duration: 8
+            cost: 17.28
+            price: 17.28
+          - duration: 12
+            cost: 25.92
+            price: 25.92
       - resolution: "1280x720"
-        cost: 0.30
-        price: 0.30
+        durations:
+          - duration: 4
+            cost: 8.64
+            price: 8.64
+          - duration: 8
+            cost: 17.28
+            price: 17.28
+          - duration: 12
+            cost: 25.92
+            price: 25.92
       - resolution: "1024x1792"
-        cost: 0.30
-        price: 0.50
+        durations:
+          - duration: 4
+            cost: 14.4
+            price: 14.4
+          - duration: 8
+            cost: 28.8
+            price: 28.8
+          - duration: 12
+            cost: 43.2
+            price: 43.2
       - resolution: "1792x1024"
-        cost: 0.30
-        price: 0.50
+        durations:
+          - duration: 4
+            cost: 14.4
+            price: 14.4
+          - duration: 8
+            cost: 28.8
+            price: 28.8
+          - duration: 12
+            cost: 43.2
+            price: 43.2

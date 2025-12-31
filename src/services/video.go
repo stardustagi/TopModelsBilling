@@ -36,7 +36,7 @@ func (m *FeeService) getVideoPriceAndCost(model, size string, seconds int) (floa
 		price, cost = videoPricing.GetPriceAndCost(model, "default", seconds)
 	}
 	if price == 0 {
-		return 0, 0, fmt.Errorf("No pricing found for model %s, size %s, seconds %f", model, size, seconds)
+		return 0, 0, fmt.Errorf("No pricing found for model %s, size %s, seconds %d", model, size, seconds)
 	}
 
 	return price, cost, nil

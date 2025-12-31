@@ -30,7 +30,7 @@ func (m *FeeService) calculateImageActualCost(inst FeeInstance) (float64, float6
 		if err != nil {
 			return 0, 0, err
 		}
-		totalCost += cost // 转换为微分单位
+		totalCost += cost
 		totalPrice += price
 	}
 
