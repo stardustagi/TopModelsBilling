@@ -310,6 +310,8 @@ func (m *FeeService) deductTextFees(instances []FeeInstance) ([]*models.UserCons
 			ActualProvider:   inst.data.ActualProvider,
 			ActualProviderId: inst.data.ActualProviderId,
 			CreatedAt:        time.Now().Unix(),
+			Latency:          usage.Latency,
+			TokensPerSec:     usage.TokensPerSec,
 		}
 		if _, err := session.InsertOne(&record); err != nil {
 			logrus.Errorf("insert record: %v", err)
