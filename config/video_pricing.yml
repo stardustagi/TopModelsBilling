@@ -15,25 +15,25 @@ models:
       - resolution: "720x1280"
         durations:
           - duration: 4
-            cost: 2.88
-            price: 2.88
+            cost: 2.8
+            price: 2.8
           - duration: 8
-            cost: 5.76
-            price: 5.76
+            cost: 5.6
+            price: 5.6
           - duration: 12
-            cost: 8.64
-            price: 8.64
+            cost: 8.4
+            price: 8.4
       - resolution: "1280x720"
         durations:
           - duration: 4
-            cost: 2.88
-            price: 2.88
+            cost: 2.8
+            price: 2.8
           - duration: 8
-            cost: 5.76
-            price: 5.76
+            cost: 5.6
+            price: 5.6
           - duration: 12
-            cost: 8.64
-            price: 8.64
+            cost: 8.4
+            price: 8.4
 
   # Sora 2 Pro Model
   - model: "sora-2-pro"
@@ -43,44 +43,44 @@ models:
       - resolution: "720x1280"
         durations:
           - duration: 4
-            cost: 8.64
-            price: 8.64
+            cost: 8.4
+            price: 8.4
           - duration: 8
-            cost: 17.28
-            price: 17.28
+            cost: 16.8
+            price: 16.8
           - duration: 12
-            cost: 25.92
-            price: 25.92
+            cost: 25.2
+            price: 25.2
       - resolution: "1280x720"
         durations:
           - duration: 4
-            cost: 8.64
-            price: 8.64
+            cost: 8.4
+            price: 8.4
           - duration: 8
-            cost: 17.28
-            price: 17.28
+            cost: 16.8
+            price: 16.8
           - duration: 12
-            cost: 25.92
-            price: 25.92
+            cost: 25.2
+            price: 25.2
       - resolution: "1024x1792"
         durations:
           - duration: 4
-            cost: 14.4
-            price: 14.4
+            cost: 14
+            price: 14
           - duration: 8
-            cost: 28.8
-            price: 28.8
+            cost: 28
+            price: 28
           - duration: 12
-            cost: 43.2
-            price: 43.2
+            cost: 42
+            price: 42
       - resolution: "1792x1024"
         durations:
           - duration: 4
-            cost: 14.4
-            price: 14.4
+            cost: 14
+            price: 14
           - duration: 8
-            cost: 28.8
-            price: 28.8
+            cost: 28
+            price: 28
           - duration: 12
-            cost: 43.2
-            price: 43.2
+            cost: 42
+            price: 42

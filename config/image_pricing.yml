@@ -7,6 +7,94 @@ last_updated: "2024-01-01"
 # Pricing structure for image generation models
 # All prices are in USD per image
 models:
+  # GPT Image 1.5 Model
+  - model: "gpt-image-1.5"
+    description: "GPT Image Generation Model - Version 1.5"
+    enabled: true
+    qualities:
+      - quality: "low"
+        description: "Low quality image generation"
+        sizes:
+          - size: "1024x1024"
+            cost: 0.063
+            price: 0.063
+          - size: "1024x1536"
+            cost: 0.091
+            price: 0.091
+          - size: "1536x1024"
+            cost: 0.091
+            price: 0.091
+
+      - quality: "medium"
+        description: "Medium quality image generation"
+        sizes:
+          - size: "1024x1024"
+            cost: 0.238
+            price: 0.238
+          - size: "1024x1536"
+            cost: 0.35
+            price: 0.35
+          - size: "1536x1024"
+            cost: 0.35
+            price: 0.35
+
+      - quality: "high"
+        description: "High quality image generation"
+        sizes:
+          - size: "1024x1024"
+            cost: 0.931
+            price: 0.931
+          - size: "1024x1536"
+            cost: 1.4
+            price: 1.4
+          - size: "1536x1024"
+            cost: 1.4
+            price: 1.4
+
+  # GPT Image Latest Model
+  - model: "gpt-image-latest"
+    description: "GPT Image Generation Model - Latest Version"
+    enabled: true
+    qualities:
+      - quality: "low"
+        description: "Low quality image generation"
+        sizes:
+          - size: "1024x1024"
+            cost: 0.063
+            price: 0.063
+          - size: "1024x1536"
+            cost: 0.091
+            price: 0.091
+          - size: "1536x1024"
+            cost: 0.091
+            price: 0.091
+
+      - quality: "medium"
+        description: "Medium quality image generation"
+        sizes:
+          - size: "1024x1024"
+            cost: 0.238
+            price: 0.238
+          - size: "1024x1536"
+            cost: 0.35
+            price: 0.35
+          - size: "1536x1024"
+            cost: 0.35
+            price: 0.35
+
+      - quality: "high"
+        description: "High quality image generation"
+        sizes:
+          - size: "1024x1024"
+            cost: 0.931
+            price: 0.931
+          - size: "1024x1536"
+            cost: 1.4
+            price: 1.4
+          - size: "1536x1024"
+            cost: 1.4
+            price: 1.4
+
   # GPT Image 1 Model
   - model: "gpt-image-1"
     description: "GPT Image Generation Model - Version 1"
@@ -16,40 +104,40 @@ models:
         description: "Low quality image generation"
         sizes:
           - size: "1024x1024"
-            cost: 0.0792
-            price: 0.0792
+            cost: 0.077
+            price: 0.077
           - size: "1024x1536"
-            cost: 0.1152
-            price: 0.1152
+            cost: 0.112
+            price: 0.112
           - size: "1536x1024"
-            cost: 0.1152
-            price: 0.1152
+            cost: 0.112
+            price: 0.112
 
       - quality: "medium"
         description: "Medium quality image generation"
         sizes:
           - size: "1024x1024"
-            cost: 0.3024
-            price: 0.3024
+            cost: 0.294
+            price: 0.294
           - size: "1024x1536"
-            cost: 0.4536
-            price: 0.4536
+            cost: 0.441
+            price: 0.441
           - size: "1536x1024"
-            cost: 0.4536
-            price: 0.4536
+            cost: 0.441
+            price: 0.441
 
       - quality: "high"
         description: "High quality image generation"
         sizes:
           - size: "1024x1024"
-            cost: 1.2024
-            price: 1.2024
+            cost: 1.169
+            price: 1.169
           - size: "1024x1536"
-            cost: 1.8
-            price: 1.8
+            cost: 1.75
+            price: 1.75
           - size: "1536x1024"
-            cost: 1.8
-            price: 1.8
+            cost: 1.75
+            price: 1.75
 
   # GPT Image 1 Mini Model
   - model: "gpt-image-1-mini"
@@ -60,40 +148,40 @@ models:
         description: "Low quality image generation"
         sizes:
           - size: "1024x1024"
-            cost: 0.036
-            price: 0.036
+            cost: 0.035
+            price: 0.035
           - size: "1024x1536"
-            cost: 0.0432
-            price: 0.0432
+            cost: 0.042
+            price: 0.042
           - size: "1536x1024"
-            cost: 0.0432
-            price: 0.0432
+            cost: 0.042
+            price: 0.042
 
       - quality: "medium"
         description: "Medium quality image generation"
         sizes:
           - size: "1024x1024"
-            cost: 0.0792
-            price: 0.0792
+            cost: 0.077
+            price: 0.077
           - size: "1024x1536"
-            cost: 0.108
-            price: 0.108
+            cost: 0.105
+            price: 0.105
           - size: "1536x1024"
-            cost: 0.108
-            price: 0.108
+            cost: 0.105
+            price: 0.105
 
       - quality: "high"
         description: "High quality image generation"
         sizes:
           - size: "1024x1024"
-            cost: 0.2592
-            price: 0.2592
+            cost: 0.252
+            price: 0.252
           - size: "1024x1536"
-            cost: 0.3744
-            price: 0.3744
+            cost: 0.364
+            price: 0.364
           - size: "1536x1024"
-            cost: 0.3744
-            price: 0.3744
+            cost: 0.364
+            price: 0.364
 
   # DALL-E 3 Model
   - model: "dall-e-3"
@@ -104,27 +192,27 @@ models:
         description: "Standard quality image generation"
         sizes:
           - size: "1024x1024"
-            cost: 0.288
-            price: 0.288
+            cost: 0.28
+            price: 0.28
           - size: "1024x1792"
-            cost: 0.576
-            price: 0.576
+            cost: 0.56
+            price: 0.56
           - size: "1792x1024"
-            cost: 0.576
-            price: 0.576
+            cost: 0.56
+            price: 0.56
 
       - quality: "hd"
         description: "HD quality image generation"
         sizes:
           - size: "1024x1024"
-            cost: 0.576
-            price: 0.576
+            cost: 0.56
+            price: 0.56
           - size: "1024x1792"
-            cost: 0.864
-            price: 0.864
+            cost: 0.84
+            price: 0.84
           - size: "1792x1024"
-            cost: 0.864
-            price: 0.864
+            cost: 0.84
+            price: 0.84
 
   # DALL-E 2 Model
   - model: "dall-e-2"
@@ -135,11 +223,11 @@ models:
         description: "Standard quality image generation"
         sizes:
           - size: "256x256"
-            cost: 0.1152
-            price: 0.1152
+            cost: 0.112
+            price: 0.112
           - size: "512x512"
-            cost: 0.1296
-            price: 0.1296
+            cost: 0.126
+            price: 0.126
           - size: "1024x1024"
-            cost: 0.144
-            price: 0.144
+            cost: 0.14
+            price: 0.14
